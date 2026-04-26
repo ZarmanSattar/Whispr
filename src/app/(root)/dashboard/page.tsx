@@ -78,7 +78,7 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <div className="flex justify-end px-16 py-3 bg-[#0a0a0b] border-b border-white/[0.04]">
+      <div className="flex justify-end px-4 sm:px-8 md:px-16 py-3 bg-[#0a0a0b] border-b border-white/[0.04]">
         <SignOutButton redirectUrl="/">
           <button className="text-xs tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors">
             Sign out

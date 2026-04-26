@@ -82,7 +82,7 @@ export default function FeedbackPage() {
     <main className="min-h-screen bg-[#0a0a0b] text-[#f0ede8]">
 
       {/* NAV */}
-      <nav className="flex items-center justify-between px-16 py-5 border-b border-white/[0.06]">
+      <nav className="flex items-center justify-between px-4 sm:px-8 md:px-16 py-5 border-b border-white/[0.06]">
         <span className="font-playfair text-2xl font-bold tracking-tight">
           Whisp<span className="text-[#d4a03a] italic">r</span>
         </span>
@@ -94,7 +94,7 @@ export default function FeedbackPage() {
         </Link>
       </nav>
 
-      <div className="max-w-3xl mx-auto px-6 py-16">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
 
         {/* HEADER */}
         <div className="mb-16">
@@ -106,25 +106,25 @@ export default function FeedbackPage() {
           </h1>
 
           {/* SCORE CARD */}
-          <div className="grid grid-cols-3 gap-px bg-white/[0.06]">
-            <div className="bg-[#0a0a0b] px-8 py-8">
-              <div className={`font-playfair text-5xl font-bold mb-1 ${getScoreColor(avgScore)}`}>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-white/[0.06]">
+            <div className="bg-[#0a0a0b] px-5 sm:px-8 py-5 sm:py-8">
+              <div className={`font-playfair text-4xl sm:text-5xl font-bold mb-1 ${getScoreColor(avgScore)}`}>
                 {avgScore}
               </div>
               <div className="text-xs tracking-[0.1em] uppercase text-[#7a7870]">
                 Overall score
               </div>
             </div>
-            <div className="bg-[#0a0a0b] px-8 py-8">
-              <div className="font-playfair text-5xl font-bold text-[#f0ede8] mb-1">
+            <div className="bg-[#0a0a0b] px-5 sm:px-8 py-5 sm:py-8">
+              <div className="font-playfair text-4xl sm:text-5xl font-bold text-[#f0ede8] mb-1">
                 {answered.length}
               </div>
               <div className="text-xs tracking-[0.1em] uppercase text-[#7a7870]">
                 Questions answered
               </div>
             </div>
-            <div className="bg-[#0a0a0b] px-8 py-8">
-              <div className={`font-playfair text-5xl font-bold mb-1 ${getScoreColor(avgScore)}`}>
+            <div className="bg-[#0a0a0b] px-5 sm:px-8 py-5 sm:py-8">
+              <div className={`font-playfair text-2xl sm:text-5xl font-bold mb-1 ${getScoreColor(avgScore)}`}>
                 {getScoreLabel(avgScore)}
               </div>
               <div className="text-xs tracking-[0.1em] uppercase text-[#7a7870]">
@@ -225,7 +225,7 @@ export default function FeedbackPage() {
         </div>
 
         {/* ACTIONS */}
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
           <Link
             href="/dashboard/new"
             className="bg-[#d4a03a] text-[#0a0a0b] text-xs font-medium tracking-[0.1em] uppercase px-8 py-4 hover:bg-[#f0c060] transition-all hover:-translate-y-px hover:shadow-[0_8px_30px_rgba(212,160,58,0.3)]"

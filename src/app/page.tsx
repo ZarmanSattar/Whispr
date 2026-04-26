@@ -10,18 +10,18 @@ export default async function LandingPage() {
     <main className="bg-[#0a0a0b] text-[#f0ede8] font-light overflow-x-hidden">
 
       {/* NAV */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-16 py-5 bg-[#0a0a0b]/75 backdrop-blur-md border-b border-white/[0.06]">
+      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-8 md:px-16 py-5 bg-[#0a0a0b]/75 backdrop-blur-md border-b border-white/[0.06]">
         <span className="font-playfair text-2xl font-bold tracking-tight">
           Whisp<span className="text-[#d4a03a] italic">r</span>
         </span>
-        <div className="flex items-center gap-10">
-          <a href="#how" className="text-xs font-normal tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors">
+        <div className="flex items-center gap-3 md:gap-10">
+          <a href="#how" className="hidden md:block text-xs font-normal tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors">
             How it works
           </a>
-          <a href="#features" className="text-xs font-normal tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors">
+          <a href="#features" className="hidden md:block text-xs font-normal tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors">
             Features
           </a>
-          <a href="#pricing" className="text-xs font-normal tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors">
+          <a href="#pricing" className="hidden md:block text-xs font-normal tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors">
             Pricing
           </a>
           {isSignedIn ? (
@@ -90,7 +90,7 @@ export default async function LandingPage() {
       </section>
 
       {/* STATS STRIP */}
-      <div className="flex justify-center gap-16 py-12 border-t border-b border-white/[0.06] flex-wrap px-6">
+      <div className="flex justify-center gap-8 sm:gap-16 py-12 border-t border-b border-white/[0.06] flex-wrap px-6">
         {[
           { num: "94%", label: "Confidence increase" },
           { num: "3x",  label: "Faster preparation" },
@@ -333,7 +333,7 @@ export default async function LandingPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="px-16 py-8 border-t border-white/[0.06] flex justify-between items-center flex-wrap gap-4">
+      <footer className="px-4 sm:px-8 md:px-16 py-8 border-t border-white/[0.06] flex justify-between items-center flex-wrap gap-4">
         <span className="font-playfair text-lg font-bold text-[#7a7870]">
           Whisp<span className="text-[#d4a03a] italic">r</span>
         </span>

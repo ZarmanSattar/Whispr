@@ -64,7 +64,7 @@ export default async function AccountPage() {
     <main className="min-h-screen bg-[#0a0a0b] text-[#f0ede8]">
 
       {/* NAV */}
-      <nav className="flex items-center justify-between px-16 py-5 border-b border-white/[0.06]">
+      <nav className="flex items-center justify-between px-4 sm:px-8 md:px-16 py-5 border-b border-white/[0.06]">
         <span className="font-playfair text-2xl font-bold tracking-tight">
           Whisp<span className="text-[#d4a03a] italic">r</span>
         </span>
@@ -84,7 +84,7 @@ export default async function AccountPage() {
         </div>
       </nav>
 
-      <div className="max-w-3xl mx-auto px-6 py-16">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
 
         {/* HEADER */}
         <div className="mb-16">
@@ -123,7 +123,7 @@ export default async function AccountPage() {
             ].map((field) => (
               <div
                 key={field.label}
-                className="flex items-center justify-between py-4 border-b border-white/[0.04]"
+                className="flex items-center justify-between py-4 border-b border-white/[0.04] flex-wrap gap-x-4 gap-y-1"
               >
                 <span className="text-xs tracking-[0.1em] uppercase text-[#7a7870]">
                   {field.label}
@@ -141,7 +141,7 @@ export default async function AccountPage() {
             { label: "Avg. score", value: avgScore !== null ? avgScore.toString() : "—" },
             { label: "Best score", value: bestScore !== null ? bestScore.toString() : "—" },
           ].map((s) => (
-            <div key={s.label} className="bg-[#111114] px-6 py-6">
+            <div key={s.label} className="bg-[#111114] px-4 sm:px-6 py-5 sm:py-6">
               <div className="font-playfair text-3xl font-bold text-[#d4a03a]">
                 {s.value}
               </div>
@@ -160,7 +160,7 @@ export default async function AccountPage() {
           <p className="text-sm text-[#7a7870] leading-relaxed mb-6">
             To update your name, email, or password, visit your Clerk account settings.
           </p>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             <Link
               href="/dashboard/new"
               className="bg-[#d4a03a] text-[#0a0a0b] text-xs font-medium tracking-[0.1em] uppercase px-6 py-3 hover:bg-[#f0c060] transition-all"

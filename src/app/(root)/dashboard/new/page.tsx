@@ -47,7 +47,7 @@ export default function NewInterviewPage() {
     <main className="min-h-screen bg-[#0a0a0b] text-[#f0ede8]">
 
       {/* NAV */}
-      <nav className="flex items-center justify-between px-16 py-5 border-b border-white/[0.06]">
+      <nav className="flex items-center justify-between px-4 sm:px-8 md:px-16 py-5 border-b border-white/[0.06]">
         <span className="font-playfair text-2xl font-bold tracking-tight">
           Whisp<span className="text-[#d4a03a] italic">r</span>
         </span>
@@ -59,7 +59,7 @@ export default function NewInterviewPage() {
         </Link>
       </nav>
 
-      <div className="max-w-2xl mx-auto px-6 py-20">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
 
         {/* HEADER */}
         <div className="mb-14">

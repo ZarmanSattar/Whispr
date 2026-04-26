@@ -164,7 +164,7 @@ const timeAgo = (date: Date | null) => {
       )}
 
       {/* NAV */}
-      <nav className="flex items-center justify-between px-16 py-5 border-b border-white/[0.06]">
+      <nav className="flex items-center justify-between px-4 sm:px-8 md:px-16 py-5 border-b border-white/[0.06]">
         <span className="font-playfair text-2xl font-bold tracking-tight">
           Whisp<span className="text-[#d4a03a] italic">r</span>
         </span>
@@ -182,10 +182,10 @@ const timeAgo = (date: Date | null) => {
         </div>
       </nav>
 
-      <div className="max-w-5xl mx-auto px-6 py-16">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
 
         {/* HEADER */}
-        <div className="flex items-start justify-between mb-16">
+        <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between mb-10 sm:mb-16 gap-4">
           <div>
             <div className="text-[0.7rem] font-medium tracking-[0.2em] uppercase text-[#d4a03a] mb-3">
               Dashboard
@@ -216,7 +216,7 @@ const timeAgo = (date: Date | null) => {
               value: avgScore !== null ? avgScore.toString() : "--",
             },
           ].map((s) => (
-            <div key={s.label} className="bg-[#0a0a0b] px-8 py-6">
+            <div key={s.label} className="bg-[#0a0a0b] px-4 sm:px-8 py-5 sm:py-6">
               <div className="font-playfair text-3xl font-bold text-[#d4a03a]">
                 {s.value}
               </div>
@@ -311,10 +311,10 @@ const timeAgo = (date: Date | null) => {
                 return (
                   <div
                     key={interview.id}
-                    className="group bg-[#111114] hover:bg-[#18181c] transition-colors px-8 py-6 flex items-center justify-between gap-4"
+                    className="group bg-[#111114] hover:bg-[#18181c] transition-colors px-4 sm:px-8 py-4 sm:py-6 flex flex-wrap items-center justify-between gap-3"
                   >
                     {/* LEFT — date + info */}
-                    <div className="flex items-center gap-8 flex-1 min-w-0">
+                    <div className="flex items-center gap-3 sm:gap-8 flex-1 min-w-0">
                       {/* Date block */}
                       <div className="flex-shrink-0 text-center w-12">
                         <div className="font-playfair text-2xl font-bold text-[#d4a03a]">
@@ -362,7 +362,7 @@ const timeAgo = (date: Date | null) => {
                     </div>
 
                     {/* RIGHT — actions */}
-                    <div className="flex items-center gap-3 flex-shrink-0">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 flex-wrap">
                       <button
                         onClick={() => handleRetry(interview)}
                         className="text-[0.65rem] tracking-[0.08em] uppercase text-[#7a7870] hover:text-[#d4a03a] transition-colors px-3 py-1.5 border border-white/[0.06] hover:border-[#d4a03a]/30"
