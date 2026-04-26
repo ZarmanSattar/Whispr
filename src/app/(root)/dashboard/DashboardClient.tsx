@@ -92,18 +92,18 @@ export default function DashboardClient({
     const status = getStatus(interview);
     if (status === "completed")
       return (
-        <span className="text-[0.6rem] tracking-[0.1em] uppercase px-2 py-1 bg-[#d4a03a]/10 text-[#d4a03a] border border-[#d4a03a]/20">
+        <span className="whitespace-nowrap text-[0.6rem] tracking-[0.1em] uppercase px-2 py-1 bg-[#d4a03a]/10 text-[#d4a03a] border border-[#d4a03a]/20">
           Completed
         </span>
       );
     if (status === "in_progress")
       return (
-        <span className="text-[0.6rem] tracking-[0.1em] uppercase px-2 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20">
+        <span className="whitespace-nowrap text-[0.6rem] tracking-[0.1em] uppercase px-2 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20">
           In Progress
         </span>
       );
     return (
-      <span className="text-[0.6rem] tracking-[0.1em] uppercase px-2 py-1 bg-white/[0.04] text-[#7a7870] border border-white/[0.06]">
+      <span className="whitespace-nowrap text-[0.6rem] tracking-[0.1em] uppercase px-2 py-1 bg-white/[0.04] text-[#7a7870] border border-white/[0.06]">
         Not Started
       </span>
     );
@@ -311,76 +311,117 @@ const timeAgo = (date: Date | null) => {
                 return (
                   <div
                     key={interview.id}
-                    className="group bg-[#111114] hover:bg-[#18181c] transition-colors px-4 sm:px-8 py-4 sm:py-6 flex flex-wrap items-center justify-between gap-3"
+                    className="group bg-[#111114] hover:bg-[#18181c] transition-colors"
                   >
-                    {/* LEFT — date + info */}
-                    <div className="flex items-center gap-3 sm:gap-8 flex-1 min-w-0">
-                      {/* Date block */}
-                      <div className="flex-shrink-0 text-center w-12">
-                        <div className="font-playfair text-2xl font-bold text-[#d4a03a]">
-                          {day}
-                        </div>
-                        <div className="text-[0.6rem] tracking-[0.1em] uppercase text-[#7a7870]">
-                          {month}
-                        </div>
-                        <div className="text-[0.6rem] text-[#4a4a4a] mt-0.5">
-                          {time}
-                        </div>
+                    {/* MOBILE LAYOUT */}
+                    <div className="sm:hidden px-4 py-4">
+                      <div className="flex items-start gap-2 flex-wrap mb-2">
+                        <span className="text-sm font-medium text-[#f0ede8] leading-snug">
+                          {interview.jobRole}
+                        </span>
+                        <span className="flex-shrink-0">{statusBadge(interview)}</span>
                       </div>
-
-                      <div className="w-px h-10 bg-white/[0.06] flex-shrink-0" />
-
-                      {/* Info */}
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-3 mb-1 flex-wrap">
-                          <span className="text-sm font-medium text-[#f0ede8] truncate">
-                            {interview.jobRole}
-                          </span>
-                          {statusBadge(interview)}
-                        </div>
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <span className="text-xs text-[#7a7870]">
-                            {interview.techStack}
-                          </span>
-                          <span className="w-1 h-1 rounded-full bg-[#3a3a3a] flex-shrink-0" />
-                          <span className="text-xs text-[#7a7870] uppercase tracking-wider">
-                            {interview.experienceLevel}
-                          </span>
-                          {interview.avgScore !== null && (
-                            <>
-                              <span className="w-1 h-1 rounded-full bg-[#3a3a3a] flex-shrink-0" />
-                              <span className="text-xs text-[#d4a03a]">
-                                Avg: {interview.avgScore}/100
-                              </span>
-                            </>
-                          )}
-                          <span className="text-xs text-[#4a4a4a]">
-                            {timeAgo(interview.createdAt)}
-                          </span>
-                        </div>
+                      <div className="space-y-1 mb-4">
+                        <div className="text-xs text-[#7a7870]">{interview.techStack}</div>
+                        <div className="text-xs text-[#7a7870] uppercase tracking-wider">{interview.experienceLevel}</div>
+                        {interview.avgScore !== null && (
+                          <div className="text-xs text-[#d4a03a]">Avg: {interview.avgScore}/100</div>
+                        )}
+                        <div className="text-xs text-[#4a4a4a]">{timeAgo(interview.createdAt)}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleRetry(interview)}
+                          className="text-[0.65rem] tracking-[0.08em] uppercase text-[#7a7870] hover:text-[#d4a03a] transition-colors px-3 py-1.5 border border-white/[0.06] hover:border-[#d4a03a]/30"
+                        >
+                          Retry
+                        </button>
+                        <Link
+                          href={`/dashboard/interview/${interview.id}/feedback`}
+                          className="text-[0.65rem] tracking-[0.08em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors px-3 py-1.5 border border-white/[0.06] hover:border-white/20"
+                        >
+                          Review
+                        </Link>
+                        <button
+                          onClick={() => confirmDelete(interview.id)}
+                          className="text-[0.65rem] tracking-[0.08em] uppercase text-[#7a7870] hover:text-red-400 transition-colors px-3 py-1.5 border border-white/[0.06] hover:border-red-500/30"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
 
-                    {/* RIGHT — actions */}
-                    <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 flex-wrap">
-                      <button
-                        onClick={() => handleRetry(interview)}
-                        className="text-[0.65rem] tracking-[0.08em] uppercase text-[#7a7870] hover:text-[#d4a03a] transition-colors px-3 py-1.5 border border-white/[0.06] hover:border-[#d4a03a]/30"
-                      >
-                        Retry
-                      </button>
-                      <Link
-                        href={`/dashboard/interview/${interview.id}/feedback`}
-                        className="text-[0.65rem] tracking-[0.08em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors px-3 py-1.5 border border-white/[0.06] hover:border-white/20"
-                      >
-                        Review
-                      </Link>
-                      <button
-                        onClick={() => confirmDelete(interview.id)}
-                        className="text-[0.65rem] tracking-[0.08em] uppercase text-[#7a7870] hover:text-red-400 transition-colors px-3 py-1.5 border border-white/[0.06] hover:border-red-500/30"
-                      >
-                        Delete
-                      </button>
+                    {/* DESKTOP LAYOUT */}
+                    <div className="hidden sm:flex items-center justify-between px-8 py-6 gap-4">
+                      {/* LEFT — date + info */}
+                      <div className="flex items-center gap-8 flex-1 min-w-0">
+                        {/* Date block */}
+                        <div className="flex-shrink-0 text-center w-12">
+                          <div className="font-playfair text-2xl font-bold text-[#d4a03a]">
+                            {day}
+                          </div>
+                          <div className="text-[0.6rem] tracking-[0.1em] uppercase text-[#7a7870]">
+                            {month}
+                          </div>
+                          <div className="text-[0.6rem] text-[#4a4a4a] mt-0.5">
+                            {time}
+                          </div>
+                        </div>
+
+                        <div className="w-px h-10 bg-white/[0.06] flex-shrink-0" />
+
+                        {/* Info */}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-3 mb-1 flex-wrap">
+                            <span className="text-sm font-medium text-[#f0ede8] truncate">
+                              {interview.jobRole}
+                            </span>
+                            {statusBadge(interview)}
+                          </div>
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <span className="text-xs text-[#7a7870]">
+                              {interview.techStack}
+                            </span>
+                            <span className="w-1 h-1 rounded-full bg-[#3a3a3a] flex-shrink-0" />
+                            <span className="text-xs text-[#7a7870] uppercase tracking-wider">
+                              {interview.experienceLevel}
+                            </span>
+                            {interview.avgScore !== null && (
+                              <>
+                                <span className="w-1 h-1 rounded-full bg-[#3a3a3a] flex-shrink-0" />
+                                <span className="text-xs text-[#d4a03a]">
+                                  Avg: {interview.avgScore}/100
+                                </span>
+                              </>
+                            )}
+                            <span className="text-xs text-[#4a4a4a]">
+                              {timeAgo(interview.createdAt)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* RIGHT — actions */}
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <button
+                          onClick={() => handleRetry(interview)}
+                          className="text-[0.65rem] tracking-[0.08em] uppercase text-[#7a7870] hover:text-[#d4a03a] transition-colors px-3 py-1.5 border border-white/[0.06] hover:border-[#d4a03a]/30"
+                        >
+                          Retry
+                        </button>
+                        <Link
+                          href={`/dashboard/interview/${interview.id}/feedback`}
+                          className="text-[0.65rem] tracking-[0.08em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors px-3 py-1.5 border border-white/[0.06] hover:border-white/20"
+                        >
+                          Review
+                        </Link>
+                        <button
+                          onClick={() => confirmDelete(interview.id)}
+                          className="text-[0.65rem] tracking-[0.08em] uppercase text-[#7a7870] hover:text-red-400 transition-colors px-3 py-1.5 border border-white/[0.06] hover:border-red-500/30"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
