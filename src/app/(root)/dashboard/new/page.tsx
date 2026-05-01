@@ -1,10 +1,154 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-const experienceLevels = ["Junior", "Mid-level", "Senior", "Lead", "Manager"];
+const JOB_ROLES = [
+  "Software Engineer",
+  "Frontend Engineer",
+  "Backend Engineer",
+  "Full Stack Engineer",
+  "Mobile Engineer",
+  "iOS Engineer",
+  "Android Engineer",
+  "DevOps Engineer",
+  "Site Reliability Engineer",
+  "Data Engineer",
+  "Data Scientist",
+  "Data Analyst",
+  "Machine Learning Engineer",
+  "AI Engineer",
+  "Cloud Engineer",
+  "Security Engineer",
+  "QA Engineer",
+  "Test Engineer",
+  "Embedded Systems Engineer",
+  "Systems Engineer",
+  "Platform Engineer",
+  "Infrastructure Engineer",
+  "Product Manager",
+  "Project Manager",
+  "Engineering Manager",
+  "Tech Lead",
+  "Solutions Architect",
+  "UI/UX Designer",
+  "Blockchain Developer",
+  "Game Developer",
+];
+
+const TECH_STACKS = [
+  "JavaScript",
+  "TypeScript",
+  "Python",
+  "Java",
+  "C++",
+  "C#",
+  "Go",
+  "Rust",
+  "Ruby",
+  "PHP",
+  "Swift",
+  "Kotlin",
+  "React",
+  "Next.js",
+  "Vue.js",
+  "Angular",
+  "Svelte",
+  "Node.js",
+  "Express.js",
+  "NestJS",
+  "Django",
+  "FastAPI",
+  "Flask",
+  "Spring Boot",
+  "Laravel",
+  "Ruby on Rails",
+  "PostgreSQL",
+  "MySQL",
+  "MongoDB",
+  "Redis",
+  "SQLite",
+  "Firebase",
+  "Supabase",
+  "GraphQL",
+  "REST API",
+  "Docker",
+  "Kubernetes",
+  "AWS",
+  "Google Cloud",
+  "Azure",
+  "Terraform",
+  "Git",
+  "Linux",
+  "Nginx",
+  "React Native",
+  "Flutter",
+  "TailwindCSS",
+  "Bootstrap",
+  "Three.js",
+  "Socket.io",
+  "Prisma",
+  "Drizzle ORM",
+];
+
+const EXPERIENCE_LEVELS = ["Junior", "Mid-level", "Senior", "Lead", "Manager"];
+
+interface DropdownProps {
+  value: string;
+  onChange: (val: string) => void;
+  options: string[];
+  placeholder: string;
+}
+
+function SearchableDropdown({ value, onChange, options, placeholder }: DropdownProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const filtered = options.filter((o) =>
+    o.toLowerCase().includes(value.toLowerCase())
+  );
+
+  useEffect(() => {
+    function onOutsideClick(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onOutsideClick);
+    return () => document.removeEventListener("mousedown", onOutsideClick);
+  }, []);
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => { onChange(e.target.value); setIsOpen(true); }}
+        onFocus={() => setIsOpen(true)}
+        placeholder={placeholder}
+        className="w-full bg-[#111114] border border-white/[0.08] text-[#f0ede8] placeholder:text-[#3a3a3a] text-sm px-5 py-4 outline-none focus:border-[#d4a03a]/50 transition-colors"
+      />
+      {isOpen && filtered.length > 0 && (
+        <ul className="absolute z-20 w-full top-full mt-px bg-[#111114] border border-white/[0.08] max-h-[220px] overflow-y-auto">
+          {filtered.map((option) => (
+            <li key={option}>
+              <button
+                type="button"
+                onMouseDown={() => { onChange(option); setIsOpen(false); }}
+                className={`w-full text-left px-5 py-3 text-sm transition-colors hover:bg-[#18181c] hover:text-[#f0ede8] ${
+                  value === option ? "text-[#d4a03a]" : "text-[#7a7870]"
+                }`}
+              >
+                {option}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export default function NewInterviewPage() {
   const router = useRouter();
@@ -12,6 +156,7 @@ export default function NewInterviewPage() {
     jobRole: "",
     techStack: "",
     experienceLevel: "Mid-level",
+    numberOfQuestions: 5,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -82,12 +227,11 @@ export default function NewInterviewPage() {
             <label className="block text-xs font-medium tracking-[0.12em] uppercase text-[#7a7870] mb-3">
               Job role
             </label>
-            <input
-              type="text"
-              placeholder="e.g. Frontend Engineer, Product Manager, Data Scientist"
+            <SearchableDropdown
               value={form.jobRole}
-              onChange={(e) => setForm({ ...form, jobRole: e.target.value })}
-              className="w-full bg-[#111114] border border-white/[0.08] text-[#f0ede8] placeholder:text-[#3a3a3a] text-sm px-5 py-4 outline-none focus:border-[#d4a03a]/50 transition-colors"
+              onChange={(val) => setForm({ ...form, jobRole: val })}
+              options={JOB_ROLES}
+              placeholder="e.g. Frontend Engineer, Product Manager, Data Scientist"
             />
           </div>
 
@@ -96,16 +240,37 @@ export default function NewInterviewPage() {
             <label className="block text-xs font-medium tracking-[0.12em] uppercase text-[#7a7870] mb-3">
               Tech stack
             </label>
-            <input
-              type="text"
-              placeholder="e.g. React, Node.js, PostgreSQL, AWS"
+            <SearchableDropdown
               value={form.techStack}
-              onChange={(e) => setForm({ ...form, techStack: e.target.value })}
-              className="w-full bg-[#111114] border border-white/[0.08] text-[#f0ede8] placeholder:text-[#3a3a3a] text-sm px-5 py-4 outline-none focus:border-[#d4a03a]/50 transition-colors"
+              onChange={(val) => setForm({ ...form, techStack: val })}
+              options={TECH_STACKS}
+              placeholder="e.g. React, Node.js, PostgreSQL, AWS"
             />
             <p className="text-xs text-[#4a4a4a] mt-2">
               Separate technologies with commas.
             </p>
+          </div>
+
+          {/* Number of Questions */}
+          <div>
+            <label className="block text-xs font-medium tracking-[0.12em] uppercase text-[#7a7870] mb-3">
+              Number of Questions{" "}
+              <span className="text-[#d4a03a] font-bold normal-case text-sm ml-1">
+                {form.numberOfQuestions}
+              </span>
+            </label>
+            <input
+              type="range"
+              min={1}
+              max={20}
+              value={form.numberOfQuestions}
+              onChange={(e) => setForm({ ...form, numberOfQuestions: Number(e.target.value) })}
+              className="w-full accent-[#d4a03a] cursor-pointer"
+            />
+            <div className="flex justify-between text-[0.65rem] text-[#4a4a4a] mt-2">
+              <span>1</span>
+              <span>20</span>
+            </div>
           </div>
 
           {/* Experience Level */}
@@ -114,7 +279,7 @@ export default function NewInterviewPage() {
               Experience level
             </label>
             <div className="flex flex-wrap gap-3">
-              {experienceLevels.map((level) => (
+              {EXPERIENCE_LEVELS.map((level) => (
                 <button
                   key={level}
                   onClick={() => setForm({ ...form, experienceLevel: level })}

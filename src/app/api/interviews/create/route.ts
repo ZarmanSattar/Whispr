@@ -11,6 +11,7 @@ const CreateInterviewSchema = z.object({
   jobRole: z.string().min(1, "jobRole is required"),
   techStack: z.string().min(1, "techStack is required"),
   experienceLevel: z.string().min(1, "experienceLevel is required"),
+  numberOfQuestions: z.number().int().min(1).max(20).default(5),
 });
 
 export async function POST(req: Request) {
@@ -29,9 +30,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const { jobRole, techStack, experienceLevel } = parsed.data;
+    const { jobRole, techStack, experienceLevel, numberOfQuestions } = parsed.data;
 
-    const prompt = `You are an expert technical interviewer. Generate exactly 5 interview questions for a ${experienceLevel} ${jobRole} position. The candidate's tech stack is: ${techStack}.
+    const prompt = `You are an expert technical interviewer. Generate exactly ${numberOfQuestions} interview questions for a ${experienceLevel} ${jobRole} position. The candidate's tech stack is: ${techStack}.
 
 Return ONLY a valid JSON array with no markdown, no explanation, no code blocks. Just the raw JSON array like this:
 [
