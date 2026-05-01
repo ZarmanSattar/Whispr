@@ -165,9 +165,9 @@ const timeAgo = (date: Date | null) => {
 
       {/* NAV */}
       <nav className="flex items-center justify-between px-4 sm:px-8 md:px-16 py-5 border-b border-white/[0.06]">
-        <span className="font-playfair text-2xl font-bold tracking-tight">
+        <Link href="/" className="font-playfair text-2xl font-bold tracking-tight cursor-pointer hover:opacity-80 transition-opacity">
           Whisp<span className="text-[#d4a03a] italic">r</span>
-        </span>
+        </Link>
         <div className="flex items-center gap-6">
           <Link
             href="/dashboard/account"

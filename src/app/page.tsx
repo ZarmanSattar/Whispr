@@ -11,9 +11,9 @@ export default async function LandingPage() {
 
       {/* NAV */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-8 md:px-16 py-5 bg-[#0a0a0b]/75 backdrop-blur-md border-b border-white/[0.06]">
-        <span className="font-playfair text-2xl font-bold tracking-tight">
+        <Link href="/" className="font-playfair text-2xl font-bold tracking-tight cursor-pointer hover:opacity-80 transition-opacity">
           Whisp<span className="text-[#d4a03a] italic">r</span>
-        </span>
+        </Link>
         <div className="flex items-center gap-3 md:gap-10">
           <a href="#how" className="hidden md:block text-xs font-normal tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors">
             How it works

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 
 interface Question {
   id: string;
@@ -82,9 +83,9 @@ export default function FeedbackPage() {
 
       {/* NAV */}
       <nav className="flex items-center justify-between px-4 sm:px-8 md:px-16 py-5 border-b border-white/[0.06]">
-        <span className="font-playfair text-2xl font-bold tracking-tight">
+        <Link href="/" className="font-playfair text-2xl font-bold tracking-tight cursor-pointer hover:opacity-80 transition-opacity">
           Whisp<span className="text-[#d4a03a] italic">r</span>
-        </span>
+        </Link>
         <Link
           href="/dashboard"
           className="text-xs tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors"
@@ -92,6 +93,16 @@ export default function FeedbackPage() {
           ← Dashboard
         </Link>
       </nav>
+
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-8">
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-1.5 text-xs tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors"
+        >
+          <ChevronLeft className="w-3.5 h-3.5" />
+          Back to Dashboard
+        </Link>
+      </div>
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
 

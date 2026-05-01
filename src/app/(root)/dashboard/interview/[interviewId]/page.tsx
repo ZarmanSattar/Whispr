@@ -28,6 +28,7 @@ export default function InterviewPage() {
   const [silenceSeconds, setSilenceSeconds] = useState(0);
   const [useTextMode, setUseTextMode] = useState(false);
   const [textAnswer, setTextAnswer] = useState("");
+  const [showExitModal, setShowExitModal] = useState(false);
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const silenceTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -188,11 +189,37 @@ export default function InterviewPage() {
   return (
     <main className="min-h-screen bg-[#0a0a0b] text-[#f0ede8]">
 
+      {/* EXIT CONFIRMATION MODAL */}
+      {showExitModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="bg-[#111114] border border-white/[0.06] p-8 max-w-sm w-full mx-4">
+            <h3 className="font-playfair text-xl font-bold mb-3">Leave interview?</h3>
+            <p className="text-sm text-[#7a7870] leading-relaxed mb-8">
+              Are you sure you want to leave? Your progress on this question will be lost.
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => router.push("/dashboard")}
+                className="bg-[#d4a03a] text-[#0a0a0b] text-xs font-medium tracking-[0.1em] uppercase px-6 py-3 hover:bg-[#f0c060] transition-all"
+              >
+                Leave
+              </button>
+              <button
+                onClick={() => setShowExitModal(false)}
+                className="border border-white/[0.12] text-[#7a7870] text-xs font-medium tracking-[0.1em] uppercase px-6 py-3 hover:text-[#f0ede8] hover:border-white/20 transition-all"
+              >
+                Stay
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* NAV */}
       <nav className="flex items-center justify-between px-4 sm:px-8 md:px-16 py-5 border-b border-white/[0.06]">
-        <span className="font-playfair text-2xl font-bold tracking-tight">
+        <Link href="/" className="font-playfair text-2xl font-bold tracking-tight cursor-pointer hover:opacity-80 transition-opacity">
           Whisp<span className="text-[#d4a03a] italic">r</span>
-        </span>
+        </Link>
         <div className="flex items-center gap-6">
           <span className="text-xs tracking-[0.1em] uppercase text-[#7a7870]">
             Question{" "}
@@ -200,12 +227,18 @@ export default function InterviewPage() {
             {" "}of{" "}
             <span className="text-[#f0ede8]">{questions.length}</span>
           </span>
-          <Link
-            href="/dashboard"
+          <button
+            onClick={() => {
+              if (phase === "intro" || phase === "feedback") {
+                router.push("/dashboard");
+              } else {
+                setShowExitModal(true);
+              }
+            }}
             className="text-xs tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors"
           >
             Exit
-          </Link>
+          </button>
         </div>
       </nav>
 
