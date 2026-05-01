@@ -1,10 +1,17 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { db } from "@/lib/db";
 import { mockInterviews, questions } from "@/lib/schema";
 import Groq from "groq-sdk";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+const CreateInterviewSchema = z.object({
+  jobRole: z.string().min(1, "jobRole is required"),
+  techStack: z.string().min(1, "techStack is required"),
+  experienceLevel: z.string().min(1, "experienceLevel is required"),
+});
 
 export async function POST(req: Request) {
   try {
@@ -13,11 +20,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { jobRole, techStack, experienceLevel } = await req.json();
-
-    if (!jobRole || !techStack || !experienceLevel) {
-      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+    const body = await req.json();
+    const parsed = CreateInterviewSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid request", details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
     }
+
+    const { jobRole, techStack, experienceLevel } = parsed.data;
 
     const prompt = `You are an expert technical interviewer. Generate exactly 5 interview questions for a ${experienceLevel} ${jobRole} position. The candidate's tech stack is: ${techStack}.
 
@@ -39,14 +51,14 @@ Make questions realistic, specific to the tech stack, and progressively harder.`
 
     const text = completion.choices[0]?.message?.content?.trim() || "";
     const clean = text.replace(/```json|```/g, "").trim();
-    const parsed = JSON.parse(clean);
+    const parsed2 = JSON.parse(clean);
 
     const [interview] = await db
       .insert(mockInterviews)
       .values({ userId, jobRole, techStack, experienceLevel })
       .returning();
 
-    const questionRows = parsed.map((q: { question: string; idealAnswer: string }) => ({
+    const questionRows = parsed2.map((q: { question: string; idealAnswer: string }) => ({
       interviewId: interview.id,
       questionText: q.question,
       aiAnswer: q.idealAnswer,

@@ -20,9 +20,6 @@ export default async function DashboardPage() {
     .where(eq(mockInterviews.userId, userId))
     .orderBy(desc(mockInterviews.createdAt));
 
-  // Fetch questions only for this user's interviews
-  const interviewIds = interviews.map((i) => i.id);
-
   // Build enriched interviews
   const enrichedInterviews = await Promise.all(
     interviews.map(async (interview) => {

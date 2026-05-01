@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 
 interface Question {
@@ -24,7 +24,6 @@ interface QuestionWithAnswer extends Question {
 
 export default function FeedbackPage() {
   const { interviewId } = useParams();
-  const router = useRouter();
 
   const [items, setItems] = useState<QuestionWithAnswer[]>([]);
   const [loading, setLoading] = useState(true);

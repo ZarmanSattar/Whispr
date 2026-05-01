@@ -29,9 +29,9 @@ export default function InterviewPage() {
   const [useTextMode, setUseTextMode] = useState(false);
   const [textAnswer, setTextAnswer] = useState("");
 
-  const recognitionRef = useRef<any>(null);
-  const silenceTimerRef = useRef<any>(null);
-  const waveIntervalRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const silenceTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const waveIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastTranscriptRef = useRef("");
   const silenceCountRef = useRef(0);
 
@@ -46,7 +46,7 @@ export default function InterviewPage() {
   }, [interviewId]);
 
   const stopWave = () => {
-    clearInterval(waveIntervalRef.current);
+    clearInterval(waveIntervalRef.current ?? undefined);
     setWaveHeights(Array(24).fill(3));
   };
 
@@ -62,27 +62,27 @@ export default function InterviewPage() {
     recognitionRef.current?.stop();
     setIsRecording(false);
     stopWave();
-    clearInterval(silenceTimerRef.current);
+    clearInterval(silenceTimerRef.current ?? undefined);
     setSilenceSeconds(0);
     silenceCountRef.current = 0;
     setPhase("stopped");
   }, []);
 
   const startRecording = () => {
-    const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognitionConstructor =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    if (!SpeechRecognition) {
+    if (!SpeechRecognitionConstructor) {
       setUseTextMode(true);
       return;
     }
 
-    const recognition = new SpeechRecognition();
+    const recognition = new SpeechRecognitionConstructor();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = "en-US";
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       let full = "";
       for (let i = 0; i < event.results.length; i++) {
         full += event.results[i][0].transcript;
