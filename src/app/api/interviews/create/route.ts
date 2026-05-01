@@ -38,11 +38,15 @@ Return ONLY a valid JSON array with no markdown, no explanation, no code blocks.
 [
   {
     "question": "Your interview question here?",
-    "idealAnswer": "A detailed ideal answer here."
+    "idealAnswer": "A detailed ideal answer here.",
+    "difficulty": "Easy"
   }
 ]
 
-Make questions realistic, specific to the tech stack, and progressively harder.`;
+Rules:
+- difficulty must be exactly one of: "Easy", "Medium", or "Hard"
+- Make questions realistic and specific to the tech stack
+- Progress from easier to harder questions`;
 
     const completion = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
@@ -59,10 +63,11 @@ Make questions realistic, specific to the tech stack, and progressively harder.`
       .values({ userId, jobRole, techStack, experienceLevel })
       .returning();
 
-    const questionRows = parsed2.map((q: { question: string; idealAnswer: string }) => ({
+    const questionRows = parsed2.map((q: { question: string; idealAnswer: string; difficulty?: string }) => ({
       interviewId: interview.id,
       questionText: q.question,
       aiAnswer: q.idealAnswer,
+      difficulty: ["Easy", "Medium", "Hard"].includes(q.difficulty ?? "") ? q.difficulty! : "Medium",
     }));
 
     await db.insert(questions).values(questionRows);

@@ -14,6 +14,7 @@ export const questions = pgTable("questions", {
   interviewId: uuid("interview_id").references(() => mockInterviews.id),
   questionText: text("question_text").notNull(),
   aiAnswer: text("ai_answer").notNull(),
+  difficulty: text("difficulty").notNull().default("Medium"),
 });
 
 export const userAnswers = pgTable("user_answers", {

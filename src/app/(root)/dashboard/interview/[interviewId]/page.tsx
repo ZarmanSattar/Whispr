@@ -4,13 +4,44 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
+const QUESTION_TIME = 120;
+
 interface Question {
   id: string;
   questionText: string;
   aiAnswer: string;
+  difficulty: string | null;
 }
 
 type Phase = "intro" | "listening" | "stopped" | "processing" | "feedback";
+
+// Extract the first 1–2 sentences from an aiAnswer for the hint
+function extractHint(aiAnswer: string): string {
+  let end = 0;
+  let count = 0;
+  for (let i = 0; i < aiAnswer.length; i++) {
+    if (/[.!?]/.test(aiAnswer[i])) {
+      count++;
+      end = i + 1;
+      if (count >= 2) break;
+    }
+  }
+  return end > 0 ? aiAnswer.slice(0, end).trim() : aiAnswer.slice(0, 150);
+}
+
+function DifficultyBadge({ difficulty }: { difficulty: string | null }) {
+  const d = difficulty ?? "Medium";
+  const styles: Record<string, string> = {
+    Easy:   "text-green-400  border-green-400/30  bg-green-400/10",
+    Medium: "text-yellow-400 border-yellow-400/30 bg-yellow-400/10",
+    Hard:   "text-red-400    border-red-400/30    bg-red-400/10",
+  };
+  return (
+    <span className={`text-xs uppercase tracking-widest border rounded-full px-2 py-0.5 ${styles[d] ?? styles.Medium}`}>
+      {d}
+    </span>
+  );
+}
 
 export default function InterviewPage() {
   const { interviewId } = useParams();
@@ -29,13 +60,19 @@ export default function InterviewPage() {
   const [useTextMode, setUseTextMode] = useState(false);
   const [textAnswer, setTextAnswer] = useState("");
   const [showExitModal, setShowExitModal] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(QUESTION_TIME);
+  const [showHint, setShowHint] = useState(false);
 
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const silenceTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const waveIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const recognitionRef    = useRef<SpeechRecognition | null>(null);
+  const silenceTimerRef   = useRef<ReturnType<typeof setInterval> | null>(null);
+  const waveIntervalRef   = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastTranscriptRef = useRef("");
-  const silenceCountRef = useRef(0);
+  const silenceCountRef   = useRef(0);
+  const questionTimerRef  = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pendingAutoSubmitRef = useRef(false); // submit after recording stops
+  const hasAutoSubmittedRef  = useRef(false); // prevent double-submit per question
 
+  // ── Fetch questions ──────────────────────────────────────────────────────
   useEffect(() => {
     const fetchQuestions = async () => {
       const res = await fetch(`/api/interviews/${interviewId}/questions`);
@@ -46,6 +83,7 @@ export default function InterviewPage() {
     fetchQuestions();
   }, [interviewId]);
 
+  // ── Waveform helpers ─────────────────────────────────────────────────────
   const stopWave = () => {
     clearInterval(waveIntervalRef.current ?? undefined);
     setWaveHeights(Array(24).fill(3));
@@ -53,12 +91,11 @@ export default function InterviewPage() {
 
   const startWave = () => {
     waveIntervalRef.current = setInterval(() => {
-      setWaveHeights(
-        Array(24).fill(0).map(() => Math.random() * 28 + 4)
-      );
+      setWaveHeights(Array(24).fill(0).map(() => Math.random() * 28 + 4));
     }, 80);
   };
 
+  // ── Core actions (stable refs so effects can depend on them) ─────────────
   const stopRecording = useCallback(() => {
     recognitionRef.current?.stop();
     setIsRecording(false);
@@ -69,6 +106,91 @@ export default function InterviewPage() {
     setPhase("stopped");
   }, []);
 
+  const submitAnswer = useCallback(async () => {
+    const answerText = useTextMode ? textAnswer.trim() : transcript.trim();
+    if (!answerText) return;
+    setPhase("processing");
+
+    const current = questions[currentIndex];
+    const res = await fetch("/api/interviews/answer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        questionId: current.id,
+        questionText: current.questionText,
+        aiAnswer: current.aiAnswer,
+        userAnswerText: answerText,
+      }),
+    });
+
+    const data = await res.json();
+    setFeedback(data.feedback);
+    setScore(data.score);
+    setPhase("feedback");
+  }, [useTextMode, textAnswer, transcript, questions, currentIndex]);
+
+  // ── Timer: reset state when question changes ─────────────────────────────
+  useEffect(() => {
+    setTimeLeft(QUESTION_TIME);
+    setShowHint(false);
+    hasAutoSubmittedRef.current = false;
+    pendingAutoSubmitRef.current = false;
+  }, [currentIndex]);
+
+  // ── Timer: start / pause based on phase ──────────────────────────────────
+  useEffect(() => {
+    if (questionTimerRef.current) {
+      clearInterval(questionTimerRef.current);
+      questionTimerRef.current = null;
+    }
+    // Pause during non-answering phases
+    if (phase === "processing" || phase === "feedback" || loading) return;
+
+    questionTimerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          if (questionTimerRef.current) {
+            clearInterval(questionTimerRef.current);
+            questionTimerRef.current = null;
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (questionTimerRef.current) {
+        clearInterval(questionTimerRef.current);
+        questionTimerRef.current = null;
+      }
+    };
+  }, [phase, loading, currentIndex]);
+
+  // ── Timer: auto-submit when time runs out ────────────────────────────────
+  useEffect(() => {
+    if (timeLeft > 0) return;
+    if (hasAutoSubmittedRef.current) return;
+    if (phase === "processing" || phase === "feedback") return;
+    hasAutoSubmittedRef.current = true;
+
+    if (isRecording) {
+      // Stop recording first; the next effect will call submitAnswer
+      pendingAutoSubmitRef.current = true;
+      stopRecording();
+      return;
+    }
+    void submitAnswer();
+  }, [timeLeft, phase, isRecording, submitAnswer, stopRecording]);
+
+  // ── Timer: submit after recording stops (triggered by timer expiry) ──────
+  useEffect(() => {
+    if (phase !== "stopped" || !pendingAutoSubmitRef.current) return;
+    pendingAutoSubmitRef.current = false;
+    void submitAnswer();
+  }, [phase, submitAnswer]);
+
+  // ── Speech recording ─────────────────────────────────────────────────────
   const startRecording = () => {
     const SpeechRecognitionConstructor =
       window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -94,14 +216,10 @@ export default function InterviewPage() {
       setSilenceSeconds(0);
     };
 
-    recognition.onerror = () => {
-      stopRecording();
-    };
+    recognition.onerror = () => { stopRecording(); };
 
     recognition.onend = () => {
-      if (isRecording) {
-        stopRecording();
-      }
+      if (isRecording) stopRecording();
     };
 
     recognition.start();
@@ -118,9 +236,7 @@ export default function InterviewPage() {
     silenceTimerRef.current = setInterval(() => {
       silenceCountRef.current += 1;
       setSilenceSeconds(silenceCountRef.current);
-      if (silenceCountRef.current >= 8) {
-        stopRecording();
-      }
+      if (silenceCountRef.current >= 8) stopRecording();
     }, 1000);
   };
 
@@ -129,29 +245,6 @@ export default function InterviewPage() {
     setTextAnswer("");
     lastTranscriptRef.current = "";
     setPhase("intro");
-  };
-
-  const submitAnswer = async () => {
-    const answerText = useTextMode ? textAnswer.trim() : transcript.trim();
-    if (!answerText) return;
-    setPhase("processing");
-
-    const current = questions[currentIndex];
-    const res = await fetch("/api/interviews/answer", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        questionId: current.id,
-        questionText: current.questionText,
-        aiAnswer: current.aiAnswer,
-        userAnswerText: answerText,
-      }),
-    });
-
-    const data = await res.json();
-    setFeedback(data.feedback);
-    setScore(data.score);
-    setPhase("feedback");
   };
 
   const nextQuestion = () => {
@@ -167,12 +260,26 @@ export default function InterviewPage() {
     setScore(null);
     setSilenceSeconds(0);
     silenceCountRef.current = 0;
+    // timeLeft + showHint reset via [currentIndex] effect
   };
 
-  const current = questions[currentIndex];
-  const progress = questions.length > 0 ? (currentIndex / questions.length) * 100 : 0;
+  // ── Derived display values ───────────────────────────────────────────────
+  const current      = questions[currentIndex];
+  const progress     = questions.length > 0 ? (currentIndex / questions.length) * 100 : 0;
   const activeAnswer = useTextMode ? textAnswer.trim() : transcript.trim();
+  const hintText     = current?.aiAnswer ? extractHint(current.aiAnswer) : "";
 
+  const timerVisible = phase !== "processing" && phase !== "feedback";
+  const timerMins    = Math.floor(timeLeft / 60);
+  const timerSecs    = timeLeft % 60;
+  const timerDisplay = `${timerMins}:${String(timerSecs).padStart(2, "0")}`;
+  const timerColor   =
+    timeLeft <= 10 ? "text-red-400" :
+    timeLeft <= 30 ? "text-[#d4a03a]" :
+    "text-[#f0ede8]";
+  const timerPulse = timeLeft <= 10 ? "animate-pulse" : "";
+
+  // ── Loading state ────────────────────────────────────────────────────────
   if (loading) {
     return (
       <main className="min-h-screen bg-[#0a0a0b] text-[#f0ede8] flex items-center justify-center">
@@ -243,24 +350,57 @@ export default function InterviewPage() {
       </nav>
 
       {/* PROGRESS BAR */}
-      <div className="h-px bg-white/[0.06]">
+      <div className="h-0.5 bg-white/[0.06]">
         <div
-          className="h-full bg-[#d4a03a] transition-all duration-700"
+          className="h-full bg-[#d4a03a] transition-all duration-500"
           style={{ width: `${progress}%` }}
         />
       </div>
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
 
-        {/* QUESTION LABEL */}
-        <div className="text-[0.7rem] font-medium tracking-[0.2em] uppercase text-[#d4a03a] mb-6">
-          Question {currentIndex + 1}
+        {/* QUESTION HEADER: label + difficulty badge + countdown timer */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="text-[0.7rem] font-medium tracking-[0.2em] uppercase text-[#d4a03a]">
+              Question {currentIndex + 1}
+            </div>
+            <DifficultyBadge difficulty={current?.difficulty ?? null} />
+          </div>
+          {timerVisible && (
+            <div className={`text-sm font-mono font-medium tabular-nums ${timerColor} ${timerPulse}`}>
+              {timerDisplay}
+            </div>
+          )}
         </div>
 
         {/* QUESTION TEXT */}
-        <h1 className="font-playfair text-[clamp(1.5rem,3vw,2.2rem)] font-bold leading-[1.3] tracking-[-0.01em] mb-12">
+        <h1 className="font-playfair text-[clamp(1.5rem,3vw,2.2rem)] font-bold leading-[1.3] tracking-[-0.01em] mb-8">
           {current?.questionText}
         </h1>
+
+        {/* HINT — visible during intro and listening phases */}
+        {(phase === "intro" || phase === "listening") && hintText && (
+          <div className="mb-10">
+            <button
+              onClick={() => setShowHint((v) => !v)}
+              className="flex items-center gap-2 text-xs tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#d4a03a] transition-colors mb-3"
+            >
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-none stroke-current stroke-[1.5]">
+                <path d="M9 21h6M12 3a6 6 0 0 1 6 6c0 2.22-1.21 4.15-3 5.19V17a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-2.81C7.21 13.15 6 11.22 6 9a6 6 0 0 1 6-6z" />
+              </svg>
+              {showHint ? "Hide Hint" : "Show Hint"}
+            </button>
+            {showHint && (
+              <div className="bg-[#18181c] border border-[#d4a03a]/20 rounded-lg p-3">
+                <p className="text-sm text-[#7a7870] leading-relaxed">{hintText}</p>
+                <p className="text-[0.65rem] text-[#4a4a4a] mt-2 tracking-wide">
+                  Hint revealed — this question will be marked accordingly
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* PHASE: INTRO */}
         {phase === "intro" && (
@@ -296,7 +436,7 @@ export default function InterviewPage() {
                 />
                 <div className="flex gap-4">
                   <button
-                    onClick={submitAnswer}
+                    onClick={() => void submitAnswer()}
                     disabled={!textAnswer.trim()}
                     className="bg-[#d4a03a] text-[#0a0a0b] text-xs font-medium tracking-[0.1em] uppercase px-8 py-3.5 hover:bg-[#f0c060] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                   >
@@ -385,7 +525,7 @@ export default function InterviewPage() {
             <div className="flex flex-wrap gap-4">
               {transcript && (
                 <button
-                  onClick={submitAnswer}
+                  onClick={() => void submitAnswer()}
                   className="bg-[#d4a03a] text-[#0a0a0b] text-xs font-medium tracking-[0.1em] uppercase px-8 py-3.5 hover:bg-[#f0c060] transition-all hover:-translate-y-px hover:shadow-[0_8px_30px_rgba(212,160,58,0.3)]"
                 >
                   Submit answer
