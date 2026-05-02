@@ -64,7 +64,11 @@ export async function GET(
       })
     );
 
-    return NextResponse.json({ items });
+   return NextResponse.json({ 
+  items,
+  jobRole: interview.jobRole,
+  techStack: interview.techStack,
+});
   } catch (err) {
     console.error("Fetch feedback error:", err);
     return NextResponse.json({ error: "Failed to fetch feedback" }, { status: 500 });
