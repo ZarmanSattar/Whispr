@@ -6,7 +6,35 @@ import { questions, mockInterviews, userAnswers } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import Groq from "groq-sdk";
 
+const GROQ_MODEL = "llama-3.3-70b-versatile";
+
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(userId);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(userId, { count: 1, resetAt: now + 60_000 });
+    return true;
+  }
+  if (entry.count >= 10) return false;
+  entry.count++;
+  return true;
+}
+
+async function withRetry<T>(fn: () => Promise<T>, retries = 3, delayMs = 1000): Promise<T> {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (attempt === retries - 1) throw err;
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+  throw new Error("Unreachable");
+}
 
 const AnswerSchema = z.object({
   questionId: z.string().uuid("questionId must be a valid UUID"),
@@ -20,6 +48,10 @@ export async function POST(req: Request) {
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (!checkRateLimit(userId)) {
+      return NextResponse.json({ error: "Too many requests, please slow down" }, { status: 429 });
     }
 
     const body = await req.json();
@@ -54,28 +86,43 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const prompt = `You are an expert technical interviewer evaluating a candidate's answer.
+    const prompt = `You are an expert technical interviewer grading a candidate's answer using a strict rubric.
 
 Question: ${questionText}
 
-Ideal Answer: ${aiAnswer}
+Model Answer: ${aiAnswer}
 
 Candidate's Answer: ${userAnswerText}
 
-Evaluate the candidate's answer and return ONLY a valid JSON object with no markdown, no explanation, no code blocks:
+Grade the candidate's answer using this rubric (total 100 points):
+- Technical accuracy (40 points): Is the answer technically correct and factually sound?
+- Depth and detail (25 points): Does the answer go beyond surface level with examples or reasoning?
+- Clarity and structure (20 points): Is the answer well organized, coherent, and easy to follow?
+- Relevance (15 points): Does the answer directly address what was asked without going off-topic?
+
+Return ONLY a valid JSON object with no markdown, no code blocks, and no text outside the JSON. The structure must be exactly:
 {
-  "score": <integer 0-100>,
-  "feedback": "<2-3 sentences of specific, constructive feedback>"
-}`;
+  "score": 0,
+  "feedback": "specific constructive feedback paragraph here"
+}
 
-    const completion = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.3,
-    });
+Rules:
+- score must be an integer between 0 and 100
+- feedback must be specific to this candidate's answer — reference what they actually said
+- feedback should acknowledge what was done well, identify what was missing or incorrect, and suggest concrete improvements
+- Do not use generic phrases like "good job" or "needs improvement" without specifics
+- Do not include any text, explanation, or formatting outside the JSON object`;
 
-    const text = completion.choices[0]?.message?.content?.trim() || "";
-    const clean = text.replace(/```json|```/g, "").trim();
+    const completion = await withRetry(() =>
+      groq.chat.completions.create({
+        model: GROQ_MODEL,
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.3,
+      })
+    );
+
+    const text = completion.choices[0]?.message?.content?.trim() ?? "";
+    const clean = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
     const result = JSON.parse(clean);
 
     await db.insert(userAnswers).values({
