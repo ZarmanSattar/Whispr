@@ -330,7 +330,7 @@ export default function DashboardClient({
           </Link>
           <Link
             href="/dashboard/account"
-            className="hidden md:flex text-xs tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors"
+            className="text-xs tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors"
           >
             Account
           </Link>
@@ -375,23 +375,23 @@ export default function DashboardClient({
 
         {/* ROLE INSIGHTS */}
         {showInsights && (
-          <div className="flex flex-wrap gap-px bg-white/[0.06] mb-8">
-            <div className="bg-[#0a0a0b] px-4 sm:px-8 py-4 flex-1 min-w-0">
+          <div className="flex flex-col md:flex-row gap-px bg-white/[0.06] mb-8">
+            <div className="bg-[#0a0a0b] px-4 sm:px-8 py-4 w-full md:flex-1">
               <div className="text-[0.65rem] tracking-[0.14em] uppercase text-[#7a7870] mb-1">
                 Strongest role
               </div>
-              <div className="text-sm font-medium text-[#d4a03a] truncate">
+              <div className="text-sm font-medium text-[#d4a03a]">
                 {bestRole.role}{" "}
                 <span className="text-[#7a7870] font-normal text-xs">
                   ({bestRole.avg}/100)
                 </span>
               </div>
             </div>
-            <div className="bg-[#0a0a0b] px-4 sm:px-8 py-4 flex-1 min-w-0">
+            <div className="bg-[#0a0a0b] px-4 sm:px-8 py-4 w-full md:flex-1">
               <div className="text-[0.65rem] tracking-[0.14em] uppercase text-[#7a7870] mb-1">
                 Needs work
               </div>
-              <div className="text-sm font-medium text-[#f0ede8] truncate">
+              <div className="text-sm font-medium text-[#f0ede8]">
                 {worstRole.role}{" "}
                 <span className="text-[#7a7870] font-normal text-xs">
                   ({worstRole.avg}/100)
