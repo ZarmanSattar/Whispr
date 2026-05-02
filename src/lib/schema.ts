@@ -25,3 +25,14 @@ export const userAnswers = pgTable("user_answers", {
   score: integer("score").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const education = pgTable("education", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id").notNull(),
+  degree: text("degree").notNull(),
+  fieldOfStudy: text("field_of_study").notNull(),
+  institution: text("institution").notNull(),
+  graduationYear: integer("graduation_year"),
+  gpa: text("gpa"),
+  createdAt: timestamp("created_at").defaultNow(),
+});

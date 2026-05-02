@@ -7,6 +7,7 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import SignOutConfirm from "./SignOutConfirm";
 import ProfileEditor from "./ProfileEditor";
+import EducationEditor from "./EducationEditor";
 
 export default async function AccountPage() {
   const { userId } = await auth();
@@ -178,6 +179,9 @@ export default async function AccountPage() {
             ))}
           </div>
         </div>
+
+        {/* EDUCATION */}
+        <EducationEditor />
 
         {/* PERFORMANCE OVERVIEW */}
         <div>

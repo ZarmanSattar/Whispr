@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
 import { Pencil, Camera } from "lucide-react";
 
@@ -81,10 +82,13 @@ export default function ProfileEditor({ initialFirstName, initialLastName, email
           aria-label="Change profile photo"
         >
           {imageUrl ? (
-            <img
+            <Image
               src={imageUrl}
               alt="Profile"
+              width={64}
+              height={64}
               className="w-16 h-16 object-cover"
+              unoptimized
             />
           ) : (
             <div className="w-16 h-16 bg-[#d4a03a] flex items-center justify-center">
