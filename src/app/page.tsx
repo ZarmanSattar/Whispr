@@ -32,6 +32,12 @@ export default async function LandingPage() {
               >
                 Dashboard
               </Link>
+              <Link
+                href="/dashboard/account"
+                className="text-xs tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors"
+              >
+                Account
+              </Link>
               <SignOutConfirm variant="nav" />
             </div>
           ) : (

@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { mockInterviews, questions, userAnswers } from "@/lib/schema";
 import { eq, desc } from "drizzle-orm";
-import { SignOutButton } from "@clerk/nextjs";
 import DashboardClient from "./DashboardClient";
 
 export default async function DashboardPage() {
@@ -74,21 +73,12 @@ export default async function DashboardPage() {
       : null;
 
   return (
-    <div>
-      <div className="flex justify-end px-4 sm:px-8 md:px-16 py-3 bg-[#0a0a0b] border-b border-white/[0.04]">
-        <SignOutButton redirectUrl="/">
-          <button className="text-xs tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors">
-            Sign out
-          </button>
-        </SignOutButton>
-      </div>
-      <DashboardClient
-        interviews={enrichedInterviews}
-        firstName={firstName}
-        totalSessions={interviews.length}
-        totalAnswered={totalAnswered}
-        avgScore={globalAvgScore}
-      />
-    </div>
+    <DashboardClient
+      interviews={enrichedInterviews}
+      firstName={firstName}
+      totalSessions={interviews.length}
+      totalAnswered={totalAnswered}
+      avgScore={globalAvgScore}
+    />
   );
 }
