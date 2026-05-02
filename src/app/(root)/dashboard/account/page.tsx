@@ -5,7 +5,7 @@ import { mockInterviews, questions, userAnswers } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
-import { SignOutButton } from "@clerk/nextjs";
+import SignOutConfirm from "./SignOutConfirm";
 
 export default async function AccountPage() {
   const { userId } = await auth();
@@ -123,11 +123,7 @@ export default async function AccountPage() {
           >
             Dashboard
           </Link>
-          <SignOutButton redirectUrl="/">
-            <button className="text-xs tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors">
-              Sign out
-            </button>
-          </SignOutButton>
+          <SignOutConfirm variant="nav" />
         </div>
       </nav>
 
@@ -310,11 +306,7 @@ export default async function AccountPage() {
             >
               Dashboard
             </Link>
-            <SignOutButton redirectUrl="/">
-              <button className="border border-red-900/30 text-red-400/70 text-xs font-medium tracking-[0.1em] uppercase px-6 py-3 hover:border-red-900/60 hover:text-red-400 transition-all">
-                Sign out
-              </button>
-            </SignOutButton>
+            <SignOutConfirm variant="actions" />
           </div>
         </div>
 
