@@ -29,7 +29,7 @@ export async function PUT(
   }
 
   const body = await req.json();
-  const { degree, fieldOfStudy, institution, graduationYear, gpa } = body;
+  const { degree, fieldOfStudy, institution, startYear, endYear, gpa } = body;
 
   const [updated] = await db
     .update(education)
@@ -37,7 +37,8 @@ export async function PUT(
       ...(degree !== undefined && { degree }),
       ...(fieldOfStudy !== undefined && { fieldOfStudy }),
       ...(institution !== undefined && { institution }),
-      graduationYear: graduationYear ? Number(graduationYear) : null,
+      startYear: startYear ? Number(startYear) : null,
+      endYear: endYear ? Number(endYear) : null,
       gpa: gpa || null,
     })
     .where(eq(education.id, id))

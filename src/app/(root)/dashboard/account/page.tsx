@@ -8,6 +8,7 @@ import { ChevronLeft } from "lucide-react";
 import SignOutConfirm from "./SignOutConfirm";
 import ProfileEditor from "./ProfileEditor";
 import EducationEditor from "./EducationEditor";
+import ResumeUploader from "./ResumeUploader";
 
 export default async function AccountPage() {
   const { userId } = await auth();
@@ -182,6 +183,9 @@ export default async function AccountPage() {
 
         {/* EDUCATION */}
         <EducationEditor />
+
+        {/* RESUME */}
+        <ResumeUploader />
 
         {/* PERFORMANCE OVERVIEW */}
         <div>

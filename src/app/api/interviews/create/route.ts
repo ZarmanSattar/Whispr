@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
@@ -101,6 +101,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Too many requests, please slow down" }, { status: 429 });
     }
 
+    // Fetch optional resume context from Clerk metadata
+    let resumeText = "";
+    try {
+      const clerk = await clerkClient();
+      const clerkUser = await clerk.users.getUser(userId);
+      resumeText = (clerkUser.publicMetadata?.resumeText as string | undefined) ?? "";
+    } catch {
+      // Resume context is optional; proceed without it
+    }
+
     const body = await req.json();
     const parsed = CreateInterviewSchema.safeParse(body);
     if (!parsed.success) {
@@ -121,6 +131,10 @@ export async function POST(req: Request) {
     ]
       .filter(Boolean)
       .join(", ");
+
+    const resumeSection = resumeText
+      ? `\n\nThe candidate has provided the following resume. Use it to personalize the questions -- reference their specific experience, technologies they have used, and projects they have worked on where relevant. Do not fabricate details not present in the resume.\nRESUME:\n${resumeText}`
+      : "";
 
     const prompt = `You are an expert technical interviewer. Generate exactly ${numberOfQuestions} interview questions for a ${experienceLevel} ${jobRole} position using this tech stack: ${techStack}.
 
@@ -144,7 +158,7 @@ Rules:
 - Follow the difficulty distribution above precisely
 - Make questions specific to the tech stack and appropriate for the experience level
 - aiAnswer must be detailed and demonstrate expert-level knowledge
-- Do not include any text, explanation, or formatting outside the JSON object`;
+- Do not include any text, explanation, or formatting outside the JSON object${resumeSection}`;
 
     const completion = await withRetry(() =>
       groq.chat.completions.create({

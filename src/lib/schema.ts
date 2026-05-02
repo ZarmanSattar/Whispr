@@ -32,7 +32,8 @@ export const education = pgTable("education", {
   degree: text("degree").notNull(),
   fieldOfStudy: text("field_of_study").notNull(),
   institution: text("institution").notNull(),
-  graduationYear: integer("graduation_year"),
+  startYear: integer("start_year"),
+  endYear: integer("end_year"),
   gpa: text("gpa"),
   createdAt: timestamp("created_at").defaultNow(),
 });

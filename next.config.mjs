@@ -6,6 +6,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  serverExternalPackages: ["pdf-parse", "mammoth"],
 };
 
 export default nextConfig;

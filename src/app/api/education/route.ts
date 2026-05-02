@@ -14,7 +14,7 @@ export async function GET() {
     .select()
     .from(education)
     .where(eq(education.userId, userId))
-    .orderBy(desc(education.graduationYear));
+    .orderBy(desc(education.createdAt));
 
   return NextResponse.json({ education: entries });
 }
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json();
-  const { degree, fieldOfStudy, institution, graduationYear, gpa } = body;
+  const { degree, fieldOfStudy, institution, startYear, endYear, gpa } = body;
 
   if (!degree || !fieldOfStudy || !institution) {
     return NextResponse.json(
@@ -42,7 +42,8 @@ export async function POST(req: Request) {
       degree,
       fieldOfStudy,
       institution,
-      graduationYear: graduationYear ? Number(graduationYear) : null,
+      startYear: startYear ? Number(startYear) : null,
+      endYear: endYear ? Number(endYear) : null,
       gpa: gpa || null,
     })
     .returning();
