@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import SignOutConfirm from "./SignOutConfirm";
+import ProfileEditor from "./ProfileEditor";
 
 export default async function AccountPage() {
   const { userId } = await auth();
@@ -151,23 +152,11 @@ export default async function AccountPage() {
 
         {/* PROFILE CARD */}
         <div className="bg-[#111114] border border-white/[0.06] p-8">
-          <div className="flex items-center gap-6 mb-8">
-            {/* Avatar */}
-            <div className="w-16 h-16 bg-[#d4a03a] flex items-center justify-center flex-shrink-0">
-              <span className="font-playfair text-2xl font-bold text-[#0a0a0b]">
-                {firstName?.[0] || email[0]?.toUpperCase() || "?"}
-              </span>
-            </div>
-            <div>
-              <div className="text-lg font-medium text-[#f0ede8]">
-                {firstName} {lastName}
-              </div>
-              <div className="text-sm text-[#7a7870] mt-0.5">{email}</div>
-              <div className="text-xs text-[#4a4a4a] mt-1">
-                Member since {joined}
-              </div>
-            </div>
-          </div>
+          <ProfileEditor
+            initialFirstName={firstName}
+            initialLastName={lastName}
+            email={email}
+          />
 
           {/* Details */}
           <div className="space-y-px">
