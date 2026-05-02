@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
-import { SignOutButton } from "@clerk/nextjs";
+import SignOutConfirm from "./(root)/dashboard/account/SignOutConfirm";
 
 export default async function LandingPage() {
   const { userId } = await auth();
@@ -32,11 +32,7 @@ export default async function LandingPage() {
               >
                 Dashboard
               </Link>
-              <SignOutButton redirectUrl="/">
-                <button className="text-xs font-normal tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors">
-                  Sign out
-                </button>
-              </SignOutButton>
+              <SignOutConfirm variant="nav" />
             </div>
           ) : (
             <Link

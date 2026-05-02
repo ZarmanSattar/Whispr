@@ -335,13 +335,7 @@ export default function InterviewPage() {
             <span className="text-[#f0ede8]">{questions.length}</span>
           </span>
           <button
-            onClick={() => {
-              if (phase === "intro" || phase === "feedback") {
-                router.push("/dashboard");
-              } else {
-                setShowExitModal(true);
-              }
-            }}
+            onClick={() => setShowExitModal(true)}
             className="text-xs tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors"
           >
             Exit

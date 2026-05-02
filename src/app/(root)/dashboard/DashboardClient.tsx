@@ -12,6 +12,7 @@ import {
   YAxis,
   Tooltip,
 } from "recharts";
+import SignOutConfirm from "./account/SignOutConfirm";
 
 interface Interview {
   id: string;
@@ -327,6 +328,7 @@ export default function DashboardClient({
           >
             Account
           </Link>
+          <SignOutConfirm variant="nav" />
           <span className="text-sm text-[#7a7870]">
             Hey,{" "}
             <span className="text-[#f0ede8] font-medium">{firstName}</span>
