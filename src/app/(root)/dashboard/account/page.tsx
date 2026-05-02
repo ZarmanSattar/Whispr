@@ -121,6 +121,12 @@ export default async function AccountPage() {
         </Link>
         <div className="flex items-center gap-6">
           <Link
+            href="/"
+            className="text-xs font-normal tracking-[0.08em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors"
+          >
+            Home
+          </Link>
+          <Link
             href="/dashboard"
             className="text-xs tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors"
           >
