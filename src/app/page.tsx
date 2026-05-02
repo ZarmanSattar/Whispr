@@ -7,6 +7,7 @@ export default async function LandingPage() {
   const isSignedIn = !!userId;
 
   return (
+    <>
     <main className="bg-[#0a0a0b] text-[#f0ede8] font-light overflow-x-hidden">
 
       {/* NAV */}
@@ -38,9 +39,6 @@ export default async function LandingPage() {
               >
                 Account
               </Link>
-              <span className="hidden md:block">
-                <SignOutConfirm variant="nav" />
-              </span>
             </div>
           ) : (
             <Link
@@ -347,5 +345,7 @@ export default async function LandingPage() {
       </footer>
 
     </main>
+    {isSignedIn && <SignOutConfirm variant="nav" />}
+    </>
   );
 }
