@@ -10,8 +10,8 @@ export default async function LandingPage() {
     <main className="bg-[#0a0a0b] text-[#f0ede8] font-light overflow-x-hidden">
 
       {/* NAV */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-8 md:px-16 py-5 bg-[#0a0a0b]/75 backdrop-blur-md border-b border-white/[0.06]">
-        <Link href="/" className="font-playfair text-2xl font-bold tracking-tight cursor-pointer hover:opacity-80 transition-opacity">
+      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between overflow-hidden px-4 sm:px-8 md:px-16 py-5 bg-[#0a0a0b]/75 backdrop-blur-md border-b border-white/[0.06]">
+        <Link href="/" className="font-playfair text-2xl font-bold tracking-tight cursor-pointer hover:opacity-80 transition-opacity shrink-0">
           Whisp<span className="text-[#d4a03a] italic">r</span>
         </Link>
         <div className="flex items-center gap-3 md:gap-10">
@@ -25,7 +25,7 @@ export default async function LandingPage() {
             Pricing
           </a>
           {isSignedIn ? (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 md:gap-4">
               <Link
                 href="/dashboard"
                 className="bg-[#d4a03a] text-[#0a0a0b] text-xs font-medium tracking-[0.08em] uppercase px-5 py-2 hover:bg-[#f0c060] transition-all hover:-translate-y-px"
@@ -34,11 +34,13 @@ export default async function LandingPage() {
               </Link>
               <Link
                 href="/dashboard/account"
-                className="text-xs tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors"
+                className="hidden md:block text-xs tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors"
               >
                 Account
               </Link>
-              <SignOutConfirm variant="nav" />
+              <span className="hidden md:block">
+                <SignOutConfirm variant="nav" />
+              </span>
             </div>
           ) : (
             <Link

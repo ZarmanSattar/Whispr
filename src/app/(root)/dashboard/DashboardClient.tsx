@@ -321,23 +321,23 @@ export default function DashboardClient({
         <Link href="/" className="font-playfair text-2xl font-bold tracking-tight cursor-pointer hover:opacity-80 transition-opacity">
           Whisp<span className="text-[#d4a03a] italic">r</span>
         </Link>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4 md:gap-6">
           <Link
             href="/"
-            className="text-xs font-normal tracking-[0.08em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors"
+            className="hidden md:flex text-xs font-normal tracking-[0.08em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors"
           >
             Home
           </Link>
           <Link
             href="/dashboard/account"
-            className="text-xs tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors"
+            className="hidden md:flex text-xs tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors"
           >
             Account
           </Link>
           <SignOutConfirm variant="nav" />
-          <span className="text-sm text-[#7a7870]">
+          <span className="text-sm text-[#7a7870] whitespace-nowrap">
             Hey,{" "}
-            <span className="text-[#f0ede8] font-medium">{firstName}</span>
+            <span className="text-[#f0ede8] font-medium truncate max-w-[100px] inline-block align-bottom">{firstName}</span>
           </span>
         </div>
       </nav>
