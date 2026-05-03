@@ -74,7 +74,7 @@ export default function NavAvatarButton() {
     </div>
 
     {showConfirm && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
         <div className="bg-[#111114] border border-white/[0.06] p-8 w-full max-w-sm mx-4">
           <p className="text-[#f0ede8] text-sm font-medium mb-2">Sign out of Whispr?</p>
           <p className="text-[#7a7870] text-xs mb-6">You will be returned to the home page.</p>
