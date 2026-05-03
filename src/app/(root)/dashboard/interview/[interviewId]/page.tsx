@@ -67,6 +67,7 @@ export default function InterviewPage() {
   const silenceTimerRef   = useRef<ReturnType<typeof setInterval> | null>(null);
   const waveIntervalRef   = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastTranscriptRef = useRef("");
+  const finalTranscriptRef = useRef("");
   const silenceCountRef   = useRef(0);
   const questionTimerRef  = useRef<ReturnType<typeof setInterval> | null>(null);
   const pendingAutoSubmitRef = useRef(false); // submit after recording stops
@@ -206,12 +207,17 @@ export default function InterviewPage() {
     recognition.lang = "en-US";
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let full = "";
-      for (let i = 0; i < event.results.length; i++) {
-        full += event.results[i][0].transcript;
+      let interimTranscript = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          finalTranscriptRef.current += event.results[i][0].transcript;
+        } else {
+          interimTranscript = event.results[i][0].transcript;
+        }
       }
-      setTranscript(full);
-      lastTranscriptRef.current = full;
+      const displayed = finalTranscriptRef.current + interimTranscript;
+      setTranscript(displayed);
+      lastTranscriptRef.current = displayed;
       silenceCountRef.current = 0;
       setSilenceSeconds(0);
     };
@@ -228,6 +234,7 @@ export default function InterviewPage() {
     setPhase("listening");
     setTranscript("");
     lastTranscriptRef.current = "";
+    finalTranscriptRef.current = "";
     silenceCountRef.current = 0;
     setSilenceSeconds(0);
     startWave();
@@ -244,6 +251,7 @@ export default function InterviewPage() {
     setTranscript("");
     setTextAnswer("");
     lastTranscriptRef.current = "";
+    finalTranscriptRef.current = "";
     setPhase("intro");
   };
 
