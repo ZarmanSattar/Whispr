@@ -12,7 +12,7 @@ export default async function LandingPage() {
     <main className="bg-[#0a0a0b] text-[#f0ede8] font-light overflow-x-hidden">
 
       {/* NAV */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between overflow-hidden px-4 sm:px-8 md:px-16 py-5 bg-[#0a0a0b]/75 backdrop-blur-md border-b border-white/[0.06]">
+      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-8 md:px-16 py-5 bg-[#0a0a0b]/75 backdrop-blur-md border-b border-white/[0.06]">
         <Link href="/" className="font-playfair text-2xl font-bold tracking-tight cursor-pointer hover:opacity-80 transition-opacity shrink-0">
           Whisp<span className="text-[#d4a03a] italic">r</span>
         </Link>
