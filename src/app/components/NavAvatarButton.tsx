@@ -28,6 +28,7 @@ export default function NavAvatarButton() {
   const email = user.emailAddresses[0]?.emailAddress ?? "";
 
   return (
+    <div className="relative">
     <div ref={containerRef} className="relative">
       <button
         onClick={() => setOpen((prev) => !prev)}
@@ -62,6 +63,7 @@ export default function NavAvatarButton() {
           </button>
         </div>
       )}
+    </div>
     </div>
   );
 }
