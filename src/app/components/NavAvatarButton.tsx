@@ -1,12 +1,14 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { useUser, useClerk } from "@clerk/nextjs";
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function NavAvatarButton() {
   const { user } = useUser();
+  const { signOut } = useClerk();
   const [open, setOpen] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -61,9 +63,38 @@ export default function NavAvatarButton() {
           >
             Go to Account
           </button>
+          <button
+            onClick={() => { setShowConfirm(true); setOpen(false); }}
+            className="border border-white/[0.12] text-[#7a7870] text-xs font-medium uppercase tracking-[0.1em] w-full py-2.5 mt-2 hover:text-[#f0ede8] hover:border-white/30 transition-colors"
+          >
+            Sign Out
+          </button>
         </div>
       )}
     </div>
+
+    {showConfirm && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="bg-[#111114] border border-white/[0.06] p-8 w-full max-w-sm mx-4">
+          <p className="text-[#f0ede8] text-sm font-medium mb-2">Sign out of Whispr?</p>
+          <p className="text-[#7a7870] text-xs mb-6">You will be returned to the home page.</p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowConfirm(false)}
+              className="border border-white/[0.12] text-[#7a7870] px-5 py-2.5 text-xs uppercase tracking-[0.1em] hover:text-[#f0ede8] transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => signOut({ redirectUrl: "/" })}
+              className="bg-[#d4a03a] text-[#0a0a0b] px-5 py-2.5 text-xs uppercase tracking-[0.1em] hover:bg-[#f0c060] transition-colors"
+            >
+              Confirm
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </div>
   );
 }
