@@ -44,7 +44,7 @@ export default function NavAvatarButton() {
       </button>
 
       {open && (
-        <div className="absolute top-12 right-0 min-w-[220px] bg-[#111114] border border-white/[0.06] rounded-sm shadow-xl p-5 z-50">
+        <div className="absolute top-12 right-0 z-50 min-w-[220px] bg-[#111114] border border-white/[0.06] rounded-sm shadow-xl p-5">
           <p className="text-[#7a7870] text-xs text-center truncate">{email}</p>
           {imageUrl ? (
             <img src={imageUrl} alt={firstName} className="w-14 h-14 rounded-full object-cover mx-auto mt-3" />
