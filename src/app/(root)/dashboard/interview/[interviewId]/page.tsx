@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
 const QUESTION_TIME = 120;
+const DEEPGRAM_KEY = process.env.NEXT_PUBLIC_DEEPGRAM_API_KEY ?? "";
 
 interface Question {
   id: string;
@@ -15,7 +16,7 @@ interface Question {
 
 type Phase = "intro" | "listening" | "stopped" | "processing" | "feedback";
 
-// Extract the first 1–2 sentences from an aiAnswer for the hint
+// Extract the first 1-2 sentences from an aiAnswer for the hint
 function extractHint(aiAnswer: string): string {
   let end = 0;
   let count = 0;
@@ -63,15 +64,30 @@ export default function InterviewPage() {
   const [timeLeft, setTimeLeft] = useState(QUESTION_TIME);
   const [showHint, setShowHint] = useState(false);
 
-  const recognitionRef    = useRef<SpeechRecognition | null>(null);
-  const silenceTimerRef   = useRef<ReturnType<typeof setInterval> | null>(null);
-  const waveIntervalRef   = useRef<ReturnType<typeof setInterval> | null>(null);
-  const lastTranscriptRef = useRef("");
+  const socketRef          = useRef<WebSocket | null>(null);
+  const mediaRecorderRef   = useRef<MediaRecorder | null>(null);
+  const streamRef          = useRef<MediaStream | null>(null);
+  const audioContextRef    = useRef<AudioContext | null>(null);
+  const animationFrameRef  = useRef<number | null>(null);
   const finalTranscriptRef = useRef("");
-  const silenceCountRef   = useRef(0);
-  const questionTimerRef  = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pendingAutoSubmitRef = useRef(false); // submit after recording stops
-  const hasAutoSubmittedRef  = useRef(false); // prevent double-submit per question
+  const interimRef         = useRef("");
+  const silenceTimerRef    = useRef<ReturnType<typeof setInterval> | null>(null);
+  const silenceCountRef    = useRef(0);
+  const questionTimerRef   = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pendingAutoSubmitRef = useRef(false);
+  const hasAutoSubmittedRef  = useRef(false);
+
+  // ── Unmount cleanup ──────────────────────────────────────────────────────
+  useEffect(() => {
+    return () => {
+      socketRef.current?.close();
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      if (animationFrameRef.current != null) cancelAnimationFrame(animationFrameRef.current);
+      void audioContextRef.current?.close();
+      clearInterval(silenceTimerRef.current ?? undefined);
+      clearInterval(questionTimerRef.current ?? undefined);
+    };
+  }, []);
 
   // ── Fetch questions ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -84,24 +100,25 @@ export default function InterviewPage() {
     fetchQuestions();
   }, [interviewId]);
 
-  // ── Waveform helpers ─────────────────────────────────────────────────────
-  const stopWave = () => {
-    clearInterval(waveIntervalRef.current ?? undefined);
-    setWaveHeights(Array(24).fill(3));
-  };
-
-  const startWave = () => {
-    waveIntervalRef.current = setInterval(() => {
-      setWaveHeights(Array(24).fill(0).map(() => Math.random() * 28 + 4));
-    }, 80);
-  };
-
   // ── Core actions (stable refs so effects can depend on them) ─────────────
   const stopRecording = useCallback(() => {
-    recognitionRef.current?.stop();
-    setIsRecording(false);
-    stopWave();
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
+    socketRef.current?.close();
+    socketRef.current = null;
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    if (animationFrameRef.current != null) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    void audioContextRef.current?.close();
+    audioContextRef.current = null;
+    setTranscript(finalTranscriptRef.current.trim());
+    setWaveHeights(Array(24).fill(3));
     clearInterval(silenceTimerRef.current ?? undefined);
+    setIsRecording(false);
     setSilenceSeconds(0);
     silenceCountRef.current = 0;
     setPhase("stopped");
@@ -144,7 +161,6 @@ export default function InterviewPage() {
       clearInterval(questionTimerRef.current);
       questionTimerRef.current = null;
     }
-    // Pause during non-answering phases
     if (phase === "processing" || phase === "feedback" || loading) return;
 
     questionTimerRef.current = setInterval(() => {
@@ -176,7 +192,6 @@ export default function InterviewPage() {
     hasAutoSubmittedRef.current = true;
 
     if (isRecording) {
-      // Stop recording first; the next effect will call submitAnswer
       pendingAutoSubmitRef.current = true;
       stopRecording();
       return;
@@ -192,52 +207,94 @@ export default function InterviewPage() {
   }, [phase, submitAnswer]);
 
   // ── Speech recording ─────────────────────────────────────────────────────
-  const startRecording = () => {
-    const SpeechRecognitionConstructor =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    if (!SpeechRecognitionConstructor) {
+  const startRecording = async () => {
+    if (!DEEPGRAM_KEY) {
       setUseTextMode(true);
       return;
     }
 
-    const recognition = new SpeechRecognitionConstructor();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = "en-US";
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      setUseTextMode(true);
+      return;
+    }
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let interimTranscript = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        if (event.results[i].isFinal) {
-          finalTranscriptRef.current += event.results[i][0].transcript;
-        } else {
-          interimTranscript = event.results[i][0].transcript;
+    streamRef.current = stream;
+    finalTranscriptRef.current = "";
+    interimRef.current = "";
+
+    // AudioContext + AnalyserNode drives the waveform visualizer
+    const audioContext = new AudioContext();
+    audioContextRef.current = audioContext;
+    const analyser = audioContext.createAnalyser();
+    analyser.fftSize = 256;
+    const source = audioContext.createMediaStreamSource(stream);
+    source.connect(analyser);
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    const step = Math.floor(bufferLength / 24);
+
+    const animateWave = () => {
+      analyser.getByteFrequencyData(dataArray);
+      const heights = Array.from({ length: 24 }, (_, i) => {
+        const val = dataArray[i * step] / 255;
+        return val * 28 + 4;
+      });
+      setWaveHeights(heights);
+      animationFrameRef.current = requestAnimationFrame(animateWave);
+    };
+    animationFrameRef.current = requestAnimationFrame(animateWave);
+
+    // Deepgram WebSocket
+    const socket = new WebSocket(
+      "wss://api.deepgram.com/v1/listen?language=en&model=nova-2&interim_results=true&punctuate=true",
+      ["token", DEEPGRAM_KEY]
+    );
+    socketRef.current = socket;
+
+    socket.onopen = () => {
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.ondataavailable = (e) => {
+        if (socket.readyState === WebSocket.OPEN && e.data.size > 0) {
+          socket.send(e.data);
         }
+      };
+      mediaRecorder.start(250);
+    };
+
+    socket.onmessage = (e: MessageEvent) => {
+      try {
+        const data = JSON.parse(e.data as string) as Record<string, unknown>;
+        const alts = (data?.channel as Record<string, unknown>)?.alternatives;
+        const t: string =
+          (Array.isArray(alts) ? (alts[0] as Record<string, unknown>)?.transcript : "") as string ?? "";
+        if (!t) return;
+        if (data.is_final) {
+          finalTranscriptRef.current += t + " ";
+          interimRef.current = "";
+        } else {
+          interimRef.current = t;
+        }
+        setTranscript((finalTranscriptRef.current + interimRef.current).trimEnd());
+        silenceCountRef.current = 0;
+        setSilenceSeconds(0);
+      } catch {
+        // ignore malformed messages
       }
-      const displayed = finalTranscriptRef.current + interimTranscript;
-      setTranscript(displayed);
-      lastTranscriptRef.current = displayed;
-      silenceCountRef.current = 0;
-      setSilenceSeconds(0);
     };
 
-    recognition.onerror = () => { stopRecording(); };
-
-    recognition.onend = () => {
-      if (isRecording) stopRecording();
+    socket.onerror = () => {
+      stopRecording();
     };
 
-    recognition.start();
-    recognitionRef.current = recognition;
     setIsRecording(true);
     setPhase("listening");
     setTranscript("");
-    lastTranscriptRef.current = "";
-    finalTranscriptRef.current = "";
     silenceCountRef.current = 0;
     setSilenceSeconds(0);
-    startWave();
 
     // Auto-stop after 8 seconds of silence
     silenceTimerRef.current = setInterval(() => {
@@ -250,8 +307,8 @@ export default function InterviewPage() {
   const reRecord = () => {
     setTranscript("");
     setTextAnswer("");
-    lastTranscriptRef.current = "";
     finalTranscriptRef.current = "";
+    interimRef.current = "";
     setPhase("intro");
   };
 
@@ -268,7 +325,6 @@ export default function InterviewPage() {
     setScore(null);
     setSilenceSeconds(0);
     silenceCountRef.current = 0;
-    // timeLeft + showHint reset via [currentIndex] effect
   };
 
   // ── Derived display values ───────────────────────────────────────────────
@@ -381,7 +437,7 @@ export default function InterviewPage() {
           {current?.questionText}
         </h1>
 
-        {/* HINT — visible during intro and listening phases */}
+        {/* HINT */}
         {(phase === "intro" || phase === "listening") && hintText && (
           <div className="mb-10">
             <button
@@ -414,7 +470,7 @@ export default function InterviewPage() {
             {!useTextMode ? (
               <div className="flex flex-wrap gap-4">
                 <button
-                  onClick={startRecording}
+                  onClick={() => { void startRecording(); }}
                   className="flex items-center gap-3 bg-[#d4a03a] text-[#0a0a0b] text-xs font-medium tracking-[0.1em] uppercase px-8 py-4 hover:bg-[#f0c060] transition-all hover:-translate-y-px hover:shadow-[0_8px_30px_rgba(212,160,58,0.3)]"
                 >
                   <span className="w-2 h-2 rounded-full bg-[#0a0a0b]" />
