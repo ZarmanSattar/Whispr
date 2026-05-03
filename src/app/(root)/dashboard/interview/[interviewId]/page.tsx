@@ -63,6 +63,7 @@ export default function InterviewPage() {
   const [showExitModal, setShowExitModal] = useState(false);
   const [timeLeft, setTimeLeft] = useState(QUESTION_TIME);
   const [showHint, setShowHint] = useState(false);
+  const [recordingError, setRecordingError] = useState<string | null>(null);
 
   const socketRef          = useRef<WebSocket | null>(null);
   const mediaRecorderRef   = useRef<MediaRecorder | null>(null);
@@ -102,22 +103,30 @@ export default function InterviewPage() {
 
   // ── Core actions (stable refs so effects can depend on them) ─────────────
   const stopRecording = useCallback(() => {
+    // Stop MediaRecorder if active
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       mediaRecorderRef.current.stop();
     }
+    // Close WebSocket
     socketRef.current?.close();
     socketRef.current = null;
+    // Stop microphone tracks
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
+    // Cancel waveform animation
     if (animationFrameRef.current != null) {
       cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
     }
+    // Close AudioContext
     void audioContextRef.current?.close();
     audioContextRef.current = null;
+    // Clear silence timer
+    clearInterval(silenceTimerRef.current ?? undefined);
+    silenceTimerRef.current = null;
+    // Commit final transcript to state so submitAnswer reads it correctly
     setTranscript(finalTranscriptRef.current.trim());
     setWaveHeights(Array(24).fill(3));
-    clearInterval(silenceTimerRef.current ?? undefined);
     setIsRecording(false);
     setSilenceSeconds(0);
     silenceCountRef.current = 0;
@@ -192,6 +201,7 @@ export default function InterviewPage() {
     hasAutoSubmittedRef.current = true;
 
     if (isRecording) {
+      // Stop recording first; the phase-change effect below will then submit
       pendingAutoSubmitRef.current = true;
       stopRecording();
       return;
@@ -208,15 +218,21 @@ export default function InterviewPage() {
 
   // ── Speech recording ─────────────────────────────────────────────────────
   const startRecording = async () => {
+    // Fix 1: confirm key is defined before attempting connection
+    console.log("[Deepgram] API key defined:", !!DEEPGRAM_KEY);
+
     if (!DEEPGRAM_KEY) {
       setUseTextMode(true);
       return;
     }
 
+    setRecordingError(null);
+
     let stream: MediaStream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch {
+      setRecordingError("Microphone access denied. Please allow microphone access and try again.");
       setUseTextMode(true);
       return;
     }
@@ -254,7 +270,12 @@ export default function InterviewPage() {
     );
     socketRef.current = socket;
 
+    // Fix 1: only start MediaRecorder once the WebSocket is confirmed open.
+    // Fix 2: start silence timer here, not before — recording only truly
+    //         begins when audio is flowing through the open socket.
     socket.onopen = () => {
+      console.log("[Deepgram] WebSocket connected, starting MediaRecorder");
+
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       mediaRecorder.ondataavailable = (e) => {
@@ -263,6 +284,15 @@ export default function InterviewPage() {
         }
       };
       mediaRecorder.start(250);
+
+      // Fix 2: silence timer starts now — when audio is actually flowing
+      silenceCountRef.current = 0;
+      clearInterval(silenceTimerRef.current ?? undefined);
+      silenceTimerRef.current = setInterval(() => {
+        silenceCountRef.current += 1;
+        setSilenceSeconds(silenceCountRef.current);
+        if (silenceCountRef.current >= 8) stopRecording();
+      }, 1000);
     };
 
     socket.onmessage = (e: MessageEvent) => {
@@ -272,6 +302,7 @@ export default function InterviewPage() {
         const t: string =
           (Array.isArray(alts) ? (alts[0] as Record<string, unknown>)?.transcript : "") as string ?? "";
         if (!t) return;
+        // Fix 2: reset silence counter on every non-empty transcript
         if (data.is_final) {
           finalTranscriptRef.current += t + " ";
           interimRef.current = "";
@@ -286,25 +317,21 @@ export default function InterviewPage() {
       }
     };
 
-    socket.onerror = () => {
+    // Fix 1: log the error and show a visible message to the user
+    socket.onerror = (event) => {
+      console.error("[Deepgram] WebSocket error:", event);
+      setRecordingError("Could not connect to transcription service. Please try again.");
       stopRecording();
     };
 
     setIsRecording(true);
     setPhase("listening");
     setTranscript("");
-    silenceCountRef.current = 0;
     setSilenceSeconds(0);
-
-    // Auto-stop after 8 seconds of silence
-    silenceTimerRef.current = setInterval(() => {
-      silenceCountRef.current += 1;
-      setSilenceSeconds(silenceCountRef.current);
-      if (silenceCountRef.current >= 8) stopRecording();
-    }, 1000);
   };
 
   const reRecord = () => {
+    setRecordingError(null);
     setTranscript("");
     setTextAnswer("");
     finalTranscriptRef.current = "";
@@ -325,6 +352,7 @@ export default function InterviewPage() {
     setScore(null);
     setSilenceSeconds(0);
     silenceCountRef.current = 0;
+    setRecordingError(null);
   };
 
   // ── Derived display values ───────────────────────────────────────────────
@@ -436,6 +464,11 @@ export default function InterviewPage() {
         <h1 className="font-playfair text-[clamp(1.5rem,3vw,2.2rem)] font-bold leading-[1.3] tracking-[-0.01em] mb-8">
           {current?.questionText}
         </h1>
+
+        {/* RECORDING ERROR — shown when WebSocket or microphone fails */}
+        {recordingError && (
+          <p className="text-xs text-red-400 tracking-wide mb-6">{recordingError}</p>
+        )}
 
         {/* HINT */}
         {(phase === "intro" || phase === "listening") && hintText && (
