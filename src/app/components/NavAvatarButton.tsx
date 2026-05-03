@@ -2,6 +2,7 @@
 
 import { useUser, useClerk } from "@clerk/nextjs";
 import { useRef, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 
 export default function NavAvatarButton() {
@@ -9,6 +10,7 @@ export default function NavAvatarButton() {
   const { signOut } = useClerk();
   const [open, setOpen] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -21,6 +23,8 @@ export default function NavAvatarButton() {
     document.addEventListener("mousedown", handleMouseDown);
     return () => document.removeEventListener("mousedown", handleMouseDown);
   }, []);
+
+  useEffect(() => { setMounted(true); }, []);
 
   if (!user) return null;
 
@@ -73,8 +77,8 @@ export default function NavAvatarButton() {
       )}
     </div>
 
-    {showConfirm && (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    {showConfirm && mounted && createPortal(
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
         <div className="bg-[#111114] border border-white/[0.06] p-8 w-full max-w-sm mx-4">
           <p className="text-[#f0ede8] text-sm font-medium mb-2">Sign out of Whispr?</p>
           <p className="text-[#7a7870] text-xs mb-6">You will be returned to the home page.</p>
@@ -93,7 +97,8 @@ export default function NavAvatarButton() {
             </button>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     )}
     </div>
   );
