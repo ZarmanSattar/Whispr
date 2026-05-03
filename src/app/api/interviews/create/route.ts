@@ -1,4 +1,4 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
@@ -42,54 +42,6 @@ const CreateInterviewSchema = z.object({
   numberOfQuestions: z.number().int().min(1).max(20).default(5),
 });
 
-function getExperienceGuidance(level: string): string {
-  const l = level.toLowerCase();
-  if (l.includes("junior")) {
-    return "Focus on fundamental concepts, basic syntax, and simple real-world scenarios. Avoid architecture or system design questions.";
-  }
-  if (l.includes("mid")) {
-    return "Focus on practical experience, problem-solving ability, and common design patterns. Include scenario-based questions.";
-  }
-  if (l.includes("senior")) {
-    return "Focus on architecture decisions, performance trade-offs, system design, and technical leadership experience.";
-  }
-  if (l.includes("lead")) {
-    return "Focus on team management, technical strategy, cross-team collaboration, and driving engineering excellence.";
-  }
-  if (l.includes("manager")) {
-    return "Focus on people management, roadmap planning, stakeholder communication, and balancing technical and business goals.";
-  }
-  return "Focus on practical experience and problem-solving ability.";
-}
-
-function getDifficultyDistribution(
-  level: string,
-  total: number
-): { easy: number; medium: number; hard: number } {
-  const l = level.toLowerCase();
-  let easy = 0, medium = 0, hard = 0;
-  if (l.includes("junior")) {
-    easy = Math.round(total * 0.7);
-    medium = total - easy;
-  } else if (l.includes("mid")) {
-    easy = Math.round(total * 0.3);
-    hard = Math.round(total * 0.2);
-    medium = total - easy - hard;
-  } else if (l.includes("senior")) {
-    hard = Math.round(total * 0.5);
-    medium = Math.round(total * 0.4);
-    easy = total - medium - hard;
-  } else if (l.includes("lead") || l.includes("manager")) {
-    hard = Math.round(total * 0.8);
-    medium = total - hard;
-  } else {
-    easy = Math.round(total * 0.3);
-    hard = Math.round(total * 0.2);
-    medium = total - easy - hard;
-  }
-  return { easy: Math.max(0, easy), medium: Math.max(0, medium), hard: Math.max(0, hard) };
-}
-
 export async function POST(req: Request) {
   try {
     const { userId } = await auth();
@@ -101,16 +53,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Too many requests, please slow down" }, { status: 429 });
     }
 
-    // Fetch optional resume context from Clerk metadata
-    let resumeText = "";
-    try {
-      const clerk = await clerkClient();
-      const clerkUser = await clerk.users.getUser(userId);
-      resumeText = (clerkUser.publicMetadata?.resumeText as string | undefined) ?? "";
-    } catch {
-      // Resume context is optional; proceed without it
-    }
-
     const body = await req.json();
     const parsed = CreateInterviewSchema.safeParse(body);
     if (!parsed.success) {
@@ -120,71 +62,65 @@ export async function POST(req: Request) {
       );
     }
 
-    const { jobRole, techStack, experienceLevel, numberOfQuestions } = parsed.data;
-    const guidance = getExperienceGuidance(experienceLevel);
-    const dist = getDifficultyDistribution(experienceLevel, numberOfQuestions);
-
-    const difficultyInstruction = [
-      dist.easy > 0 ? `${dist.easy} question(s) labeled "Easy"` : "",
-      dist.medium > 0 ? `${dist.medium} question(s) labeled "Medium"` : "",
-      dist.hard > 0 ? `${dist.hard} question(s) labeled "Hard"` : "",
-    ]
-      .filter(Boolean)
-      .join(", ");
-
-    const resumeSection = resumeText
-      ? `\n\nThe candidate has provided the following resume. Use it to personalize the questions -- reference their specific experience, technologies they have used, and projects they have worked on where relevant. Do not fabricate details not present in the resume.\nRESUME:\n${resumeText}`
-      : "";
-
-    const prompt = `You are an expert technical interviewer. Generate exactly ${numberOfQuestions} interview questions for a ${experienceLevel} ${jobRole} position using this tech stack: ${techStack}.
-
-Experience level guidance: ${guidance}
-
-Difficulty distribution (follow precisely): ${difficultyInstruction}.
-
-Return ONLY a valid JSON object with no markdown, no code blocks, and no text outside the JSON. The structure must be exactly:
-{
-  "questions": [
-    {
-      "questionText": "the interview question",
-      "aiAnswer": "a thorough model answer demonstrating expert knowledge",
-      "difficulty": "Easy"
-    }
-  ]
-}
-
-Rules:
-- difficulty must be exactly one of: "Easy", "Medium", or "Hard"
-- Follow the difficulty distribution above precisely
-- Make questions specific to the tech stack and appropriate for the experience level
-- aiAnswer must be detailed and demonstrate expert-level knowledge
-- Do not include any text, explanation, or formatting outside the JSON object${resumeSection}`;
+    const { jobRole, techStack, experienceLevel } = parsed.data;
 
     const completion = await withRetry(() =>
       groq.chat.completions.create({
         model: GROQ_MODEL,
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.7,
+        messages: [
+          {
+            role: "system",
+            content: `You are a senior technical interviewer at a top-tier technology company. You conduct real, high-signal interviews that assess both technical depth and practical thinking. Your questions are conversational, specific, and never sound like they came from a textbook or quiz.
+
+You generate a mix of three question types:
+1. Technical — specific to the candidate's stack and role. Ask about tradeoffs, internals, real implementation decisions. Not definitions.
+2. Behavioral — framed as 'Tell me about a time...' or 'Walk me through a situation where...'. Must be relevant to the role level.
+3. Scenario-based — present a realistic situation the candidate could face on the job. Ask what they would do and why.
+
+Rules:
+- Never ask questions that can be answered in one sentence
+- Never ask textbook definitions ('What is a closure?', 'What is a promise?')
+- Questions must feel like they come from a real interviewer who has read the job description
+- Difficulty must match the experience level precisely
+- For Junior: focus on fundamentals applied in context, avoid system design
+- For Mid-level: mix of applied technical, some system design, behavioral
+- For Senior: system design, architectural tradeoffs, leadership scenarios, deep technical
+- For Lead/Manager: org design, technical vision, cross-team scenarios, people decisions
+- Distribute question types: 2 technical, 1 behavioral, 1 scenario-based, 1 wildcard (any type that fits best)
+- Each ideal answer must be 150-250 words, written as bullet points a strong candidate would cover, not a paragraph`,
+          },
+          {
+            role: "user",
+            content: `Generate exactly 5 interview questions for a ${experienceLevel} ${jobRole}. Tech stack: ${techStack}.
+
+Return ONLY a valid JSON array. No markdown, no explanation, no code blocks. Raw JSON only:
+[
+  {
+    "question": "Question text here?",
+    "idealAnswer": "Bullet point answer covering key points a strong candidate would hit.",
+    "type": "technical" | "behavioral" | "scenario"
+  }
+]`,
+          },
+        ],
+        temperature: 0.8,
       })
     );
 
     const text = completion.choices[0]?.message?.content?.trim() ?? "";
     const clean = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
-    const parsed2 = JSON.parse(clean);
+    const parsed2 = JSON.parse(clean) as Array<{ question: string; idealAnswer: string; type?: string }>;
 
     const [interview] = await db
       .insert(mockInterviews)
       .values({ userId, jobRole, techStack, experienceLevel })
       .returning();
 
-    const validDifficulties = ["Easy", "Medium", "Hard"];
-    const questionRows = (
-      parsed2.questions as Array<{ questionText: string; aiAnswer: string; difficulty?: string }>
-    ).map((q) => ({
+    const questionRows = parsed2.map((q) => ({
       interviewId: interview.id,
-      questionText: q.questionText,
-      aiAnswer: q.aiAnswer,
-      difficulty: validDifficulties.includes(q.difficulty ?? "") ? q.difficulty! : "Medium",
+      questionText: q.question,
+      aiAnswer: q.idealAnswer,
+      difficulty: "Medium" as const,
     }));
 
     await db.insert(questions).values(questionRows);

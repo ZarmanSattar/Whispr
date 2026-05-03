@@ -63,7 +63,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { questionId, questionText, aiAnswer, userAnswerText } = parsed.data;
+    const { questionId, questionText, userAnswerText } = parsed.data;
 
     // Verify the question exists and belongs to an interview owned by this user
     const [question] = await db
@@ -86,37 +86,40 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const prompt = `You are an expert technical interviewer grading a candidate's answer using a strict rubric.
-
-Question: ${questionText}
-
-Model Answer: ${aiAnswer}
-
-Candidate's Answer: ${userAnswerText}
-
-Grade the candidate's answer using this rubric (total 100 points):
-- Technical accuracy (40 points): Is the answer technically correct and factually sound?
-- Depth and detail (25 points): Does the answer go beyond surface level with examples or reasoning?
-- Clarity and structure (20 points): Is the answer well organized, coherent, and easy to follow?
-- Relevance (15 points): Does the answer directly address what was asked without going off-topic?
-
-Return ONLY a valid JSON object with no markdown, no code blocks, and no text outside the JSON. The structure must be exactly:
-{
-  "score": 0,
-  "feedback": "specific constructive feedback paragraph here"
-}
-
-Rules:
-- score must be an integer between 0 and 100
-- feedback must be specific to this candidate's answer — reference what they actually said
-- feedback should acknowledge what was done well, identify what was missing or incorrect, and suggest concrete improvements
-- Do not use generic phrases like "good job" or "needs improvement" without specifics
-- Do not include any text, explanation, or formatting outside the JSON object`;
-
     const completion = await withRetry(() =>
       groq.chat.completions.create({
         model: GROQ_MODEL,
-        messages: [{ role: "user", content: prompt }],
+        messages: [
+          {
+            role: "system",
+            content: `You are a senior technical interviewer giving structured, honest feedback on a candidate's interview answer. You are balanced — you acknowledge what was good before calling out gaps. You are specific and direct, never vague. You never give empty praise. You always tell the candidate exactly what was missing and what a strong answer would have included.
+
+Scoring rubric (score out of 10):
+- 9-10: Answer is complete, technically accurate, well-structured, shows depth and real experience
+- 7-8: Covers most key points, minor gaps, good communication
+- 5-6: Hits some points but misses important concepts or lacks depth
+- 3-4: Partial answer, significant gaps, unclear communication
+- 1-2: Off-topic, incorrect, or essentially no answer
+
+Feedback must always follow this exact JSON structure — no exceptions:
+{
+  "score": number (1-10),
+  "summary": "2-3 sentence overall assessment. Acknowledge what was good first, then what was missing.",
+  "strengths": ["specific strength 1", "specific strength 2"],
+  "gaps": ["specific gap 1", "specific gap 2"],
+  "improvements": "One concrete, actionable thing they should do differently next time. Be specific.",
+  "modelAnswer": "A strong 150-200 word answer to this question written as if a senior candidate is speaking. Cover all key points the user missed. Write it in first person, conversational tone."
+}`,
+          },
+          {
+            role: "user",
+            content: `Question: ${questionText}
+
+Candidate's answer: ${userAnswerText}
+
+Evaluate this answer and return ONLY the JSON object described. No markdown, no explanation, no code blocks. Raw JSON only.`,
+          },
+        ],
         temperature: 0.3,
       })
     );
@@ -128,11 +131,11 @@ Rules:
     await db.insert(userAnswers).values({
       questionId,
       userAnswerText,
-      aiFeedback: result.feedback,
+      aiFeedback: result.summary,
       score: result.score,
     });
 
-    return NextResponse.json({ feedback: result.feedback, score: result.score });
+    return NextResponse.json(result);
   } catch (err) {
     console.error("Answer evaluation error:", err);
     return NextResponse.json({ error: "Failed to evaluate answer" }, { status: 500 });
