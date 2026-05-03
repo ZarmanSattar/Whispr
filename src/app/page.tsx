@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import SignOutConfirm from "./(root)/dashboard/account/SignOutConfirm";
+import NavAvatarButton from "./components/NavAvatarButton";
 
 export default async function LandingPage() {
   const { userId } = await auth();
@@ -33,12 +34,7 @@ export default async function LandingPage() {
               >
                 Dashboard
               </Link>
-              <Link
-                href="/dashboard/account"
-                className="hidden md:block text-xs tracking-[0.06em] uppercase text-[#7a7870] hover:text-[#f0ede8] transition-colors"
-              >
-                Account
-              </Link>
+              <NavAvatarButton />
             </div>
           ) : (
             <Link
