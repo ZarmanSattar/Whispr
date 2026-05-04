@@ -157,8 +157,8 @@ export default function NewInterviewPage() {
     jobRole: "",
     techStack: "",
     experienceLevel: "Mid-level",
-    questionCount: 5,
   });
+  const [questionCount, setQuestionCount] = useState<string>("5");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -175,7 +175,10 @@ export default function NewInterviewPage() {
       const res = await fetch("/api/interviews/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          questionCount: Math.min(Math.max(parseInt(questionCount) || 5, 1), 50),
+        }),
       });
 
       const data = await res.json();
@@ -272,9 +275,9 @@ export default function NewInterviewPage() {
                 <button
                   key={n}
                   type="button"
-                  onClick={() => setForm({ ...form, questionCount: n })}
+                  onClick={() => setQuestionCount(String(n))}
                   className={`px-5 py-2 text-xs font-medium tracking-[0.08em] uppercase border transition-all ${
-                    form.questionCount === n
+                    parseInt(questionCount) === n
                       ? "bg-[#d4a03a] text-[#0a0a0b] border-[#d4a03a]"
                       : "border border-white/[0.12] text-[#7a7870] hover:text-[#f0ede8]"
                   }`}
@@ -287,10 +290,10 @@ export default function NewInterviewPage() {
               type="number"
               min={1}
               max={50}
-              value={form.questionCount}
-              onChange={(e) => setForm({ ...form, questionCount: Number(e.target.value) })}
-              onBlur={(e) => setForm({ ...form, questionCount: Math.min(Math.max(Number(e.target.value) || 1, 1), 50) })}
-              className="w-full bg-[#111114] border border-white/[0.08] text-[#f0ede8] text-sm px-5 py-4 outline-none focus:border-[#d4a03a]/50 transition-colors"
+              value={questionCount}
+              onChange={(e) => setQuestionCount(e.target.value)}
+              onBlur={() => { const n = parseInt(questionCount); setQuestionCount(String(isNaN(n) ? 5 : Math.min(Math.max(n, 1), 50))); }}
+              className="w-24 bg-[#111114] border border-white/[0.08] focus:border-[#d4a03a]/50 text-[#f0ede8] text-sm px-3 py-2 outline-none"
             />
           </div>
 
