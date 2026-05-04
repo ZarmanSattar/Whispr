@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 export default function NavAvatarButton() {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
   const [open, setOpen] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -27,6 +27,7 @@ export default function NavAvatarButton() {
 
   useEffect(() => { setMounted(true); }, []);
 
+  if (!isLoaded) return <div className="w-8 h-8 rounded-full bg-[#18181c] animate-pulse" />;
   if (!user) return null;
 
   const firstName = user.firstName ?? "";
