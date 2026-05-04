@@ -45,7 +45,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Too many requests, please slow down" }, { status: 429 });
     }
 
-    const { jobRole, techStack, experienceLevel, questionCount } = await req.json();
+    const { jobRole, techStack, experienceLevel, questionCount, interviewType, targetCompany } = await req.json();
     const count = Math.min(Math.max(Number(questionCount) || 5, 1), 50);
 
     const completion = await withRetry(() =>
@@ -93,18 +93,21 @@ Return ONLY a valid JSON array. No markdown, no explanation, no code blocks. Raw
 
     const text = completion.choices[0]?.message?.content?.trim() ?? "";
     const clean = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
-    const parsed2 = JSON.parse(clean) as Array<{ question: string; idealAnswer: string; type?: string }>;
+    const parsed2 = JSON.parse(clean) as Array<{ question: string; idealAnswer: string; type?: string; topic?: string }>;
 
     const [interview] = await db
       .insert(mockInterviews)
-      .values({ userId, jobRole, techStack, experienceLevel })
+      .values({ userId, jobRole, techStack, experienceLevel, interviewType: interviewType || "mixed", targetCompany: targetCompany || null, status: "not_started" })
       .returning();
 
-    const questionRows = parsed2.map((q) => ({
+    const questionRows = parsed2.map((q: { question: string; idealAnswer: string; type?: string; topic?: string }, index: number) => ({
       interviewId: interview.id,
       questionText: q.question,
       aiAnswer: q.idealAnswer,
       difficulty: "Medium" as const,
+      questionType: q.type || null,
+      topic: q.topic || null,
+      orderIndex: index,
     }));
 
     await db.insert(questions).values(questionRows);

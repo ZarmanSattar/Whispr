@@ -133,7 +133,14 @@ Evaluate this answer and return ONLY the JSON object described. No markdown, no 
       userAnswerText,
       aiFeedback: result.summary,
       score: result.score,
+      skipped: userAnswerText === "SKIPPED",
+      technicalScore: result.technicalScore ?? null,
+      clarityScore: result.clarityScore ?? null,
+      depthScore: result.depthScore ?? null,
+      confidenceScore: result.confidenceScore ?? null,
     });
+
+    await db.update(mockInterviews).set({ status: "in_progress" }).where(eq(mockInterviews.id, interview.id));
 
     return NextResponse.json(result);
   } catch (err) {
