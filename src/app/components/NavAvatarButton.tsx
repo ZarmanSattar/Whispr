@@ -4,6 +4,7 @@ import { useUser, useClerk } from "@clerk/nextjs";
 import { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export default function NavAvatarButton() {
   const { user } = useUser();
@@ -42,7 +43,7 @@ export default function NavAvatarButton() {
         aria-label="Account menu"
       >
         {imageUrl ? (
-          <img src={imageUrl} alt={firstName} className="w-8 h-8 rounded-full object-cover" />
+          <Image src={imageUrl} alt={firstName} className="w-8 h-8 rounded-full object-cover" width={32} height={32} />
         ) : (
           <span className="w-8 h-8 rounded-full bg-[#d4a03a] text-[#0a0a0b] text-xs font-bold flex items-center justify-center">
             {initial}
@@ -54,7 +55,7 @@ export default function NavAvatarButton() {
         <div className="absolute top-12 right-0 z-50 min-w-[220px] bg-[#111114] border border-white/[0.06] rounded-sm shadow-xl p-5">
           <p className="text-[#7a7870] text-xs text-center truncate">{email}</p>
           {imageUrl ? (
-            <img src={imageUrl} alt={firstName} className="w-14 h-14 rounded-full object-cover mx-auto mt-3" />
+            <Image src={imageUrl} alt={firstName} className="w-14 h-14 rounded-full object-cover mx-auto mt-3" width={56} height={56} />
           ) : (
             <div className="w-14 h-14 bg-[#d4a03a] text-[#0a0a0b] font-bold text-lg flex items-center justify-center rounded-full mx-auto mt-3">
               {initial}
