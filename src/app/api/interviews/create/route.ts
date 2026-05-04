@@ -1,6 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { db } from "@/lib/db";
 import { mockInterviews, questions } from "@/lib/schema";
 import Groq from "groq-sdk";
@@ -35,13 +34,6 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 3, delayMs = 1000): 
   throw new Error("Unreachable");
 }
 
-const CreateInterviewSchema = z.object({
-  jobRole: z.string().min(1, "jobRole is required"),
-  techStack: z.string().min(1, "techStack is required"),
-  experienceLevel: z.string().min(1, "experienceLevel is required"),
-  numberOfQuestions: z.number().int().min(1).max(20).default(5),
-});
-
 export async function POST(req: Request) {
   try {
     const { userId } = await auth();
@@ -53,16 +45,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Too many requests, please slow down" }, { status: 429 });
     }
 
-    const body = await req.json();
-    const parsed = CreateInterviewSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid request", details: parsed.error.flatten().fieldErrors },
-        { status: 400 }
-      );
-    }
-
-    const { jobRole, techStack, experienceLevel } = parsed.data;
+    const { jobRole, techStack, experienceLevel, questionCount } = await req.json();
+    const count = Math.min(Math.max(Number(questionCount) || 5, 1), 50);
 
     const completion = await withRetry(() =>
       groq.chat.completions.create({
@@ -86,12 +70,12 @@ Rules:
 - For Mid-level: mix of applied technical, some system design, behavioral
 - For Senior: system design, architectural tradeoffs, leadership scenarios, deep technical
 - For Lead/Manager: org design, technical vision, cross-team scenarios, people decisions
-- Distribute question types: 2 technical, 1 behavioral, 1 scenario-based, 1 wildcard (any type that fits best)
+- Distribute question types evenly across: technical, behavioral, scenario-based, and wildcard. Proportionally scale the distribution to the total question count requested.
 - Each ideal answer must be 150-250 words, written as bullet points a strong candidate would cover, not a paragraph`,
           },
           {
             role: "user",
-            content: `Generate exactly 5 interview questions for a ${experienceLevel} ${jobRole}. Tech stack: ${techStack}.
+            content: `Generate exactly ${count} interview questions for a ${experienceLevel} ${jobRole}. Tech stack: ${techStack}.
 
 Return ONLY a valid JSON array. No markdown, no explanation, no code blocks. Raw JSON only:
 [

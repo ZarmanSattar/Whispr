@@ -157,7 +157,7 @@ export default function NewInterviewPage() {
     jobRole: "",
     techStack: "",
     experienceLevel: "Mid-level",
-    numberOfQuestions: 5,
+    questionCount: 5,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -265,23 +265,33 @@ export default function NewInterviewPage() {
           {/* Number of Questions */}
           <div>
             <label className="block text-xs font-medium tracking-[0.12em] uppercase text-[#7a7870] mb-3">
-              Number of Questions{" "}
-              <span className="text-[#d4a03a] font-bold normal-case text-sm ml-1">
-                {form.numberOfQuestions}
-              </span>
+              Number of Questions
             </label>
-            <input
-              type="range"
-              min={1}
-              max={20}
-              value={form.numberOfQuestions}
-              onChange={(e) => setForm({ ...form, numberOfQuestions: Number(e.target.value) })}
-              className="w-full accent-[#d4a03a] cursor-pointer"
-            />
-            <div className="flex justify-between text-[0.65rem] text-[#4a4a4a] mt-2">
-              <span>1</span>
-              <span>20</span>
+            <div className="flex flex-wrap gap-3 mb-4">
+              {[5, 10, 15, 20].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setForm({ ...form, questionCount: n })}
+                  className={`px-5 py-2 text-xs font-medium tracking-[0.08em] uppercase border transition-all ${
+                    form.questionCount === n
+                      ? "bg-[#d4a03a] text-[#0a0a0b] border-[#d4a03a]"
+                      : "border border-white/[0.12] text-[#7a7870] hover:text-[#f0ede8]"
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
             </div>
+            <input
+              type="number"
+              min={1}
+              max={50}
+              value={form.questionCount}
+              onChange={(e) => setForm({ ...form, questionCount: Number(e.target.value) })}
+              onBlur={(e) => setForm({ ...form, questionCount: Math.min(Math.max(Number(e.target.value) || 1, 1), 50) })}
+              className="w-full bg-[#111114] border border-white/[0.08] text-[#f0ede8] text-sm px-5 py-4 outline-none focus:border-[#d4a03a]/50 transition-colors"
+            />
           </div>
 
           {/* Experience Level */}

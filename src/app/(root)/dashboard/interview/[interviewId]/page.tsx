@@ -64,6 +64,7 @@ export default function InterviewPage() {
   const [timeLeft, setTimeLeft] = useState(QUESTION_TIME);
   const [showHint, setShowHint] = useState(false);
   const [recordingError, setRecordingError] = useState<string | null>(null);
+  const [skipping, setSkipping] = useState(false);
 
   const socketRef          = useRef<WebSocket | null>(null);
   const mediaRecorderRef   = useRef<MediaRecorder | null>(null);
@@ -155,6 +156,42 @@ export default function InterviewPage() {
     setScore(data.score);
     setPhase("feedback");
   }, [useTextMode, textAnswer, transcript, questions, currentIndex]);
+
+  const skipQuestion = useCallback(async () => {
+    if (isRecording) stopRecording();
+    setSkipping(true);
+    const current = questions[currentIndex];
+    try {
+      const res = await fetch("/api/interviews/answer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          questionId: current.id,
+          questionText: current.questionText,
+          aiAnswer: current.aiAnswer,
+          userAnswerText: "SKIPPED",
+        }),
+      });
+      const data = await res.json();
+      setFeedback(data.feedback);
+      setScore(data.score);
+      if (currentIndex + 1 >= questions.length) {
+        router.push(`/dashboard/interview/${interviewId}/feedback`);
+        return;
+      }
+      setCurrentIndex((i) => i + 1);
+      setPhase("intro");
+      setTranscript("");
+      setTextAnswer("");
+      setFeedback("");
+      setScore(null);
+      setSilenceSeconds(0);
+      silenceCountRef.current = 0;
+      setRecordingError(null);
+    } finally {
+      setSkipping(false);
+    }
+  }, [questions, currentIndex, interviewId, router, isRecording, stopRecording]);
 
   // ── Timer: reset state when question changes ─────────────────────────────
   useEffect(() => {
@@ -637,6 +674,19 @@ export default function InterviewPage() {
                 </button>
               )}
             </div>
+          </div>
+        )}
+
+        {/* SKIP QUESTION — shown during intro / listening / stopped */}
+        {(phase === "intro" || phase === "listening" || phase === "stopped") && (
+          <div className="flex justify-center mt-6">
+            <button
+              onClick={() => void skipQuestion()}
+              disabled={skipping}
+              className="border border-white/[0.12] text-[#7a7870] hover:text-[#f0ede8] text-xs uppercase tracking-[0.1em] px-5 py-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {skipping ? "Skipping..." : "Skip Question"}
+            </button>
           </div>
         )}
 
