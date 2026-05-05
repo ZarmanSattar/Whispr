@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
+import ExportButton from "./ExportButton";
 
 interface Question {
   id: string;
@@ -99,6 +101,9 @@ function AnimatedBar({ score }: { score: number }) {
 export default function FeedbackPage() {
   const { interviewId } = useParams();
   const router = useRouter();
+  const { user } = useUser();
+
+  const userName = user?.fullName || user?.firstName || "Candidate";
 
   const [items, setItems] = useState<QuestionWithAnswer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -159,170 +164,6 @@ export default function FeedbackPage() {
     return "text-green-400 border-green-400/30 bg-green-400/10";
   };
 
-  const handleExport = async () => {
-    const { jsPDF } = await import("jspdf");
-    const doc = new jsPDF({ format: "a4", orientation: "portrait" });
-
-    const PW = 210, PH = 297, MG = 20, CW = 170;
-    const CONTENT_MAX = PH - MG - 20;
-    const ROW_H = 7;
-
-    const hx = (hex: string): [number, number, number] => {
-      const h = hex.replace("#", "");
-      return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
-    };
-    const tc = (hex: string) => { const [r, g, b] = hx(hex); doc.setTextColor(r, g, b); };
-    const dc = (hex: string) => { const [r, g, b] = hx(hex); doc.setDrawColor(r, g, b); };
-    const fc = (hex: string) => { const [r, g, b] = hx(hex); doc.setFillColor(r, g, b); };
-
-    const fmtDate = (ds: string) => {
-      const d = new Date(ds || Date.now());
-      return isNaN(d.getTime())
-        ? new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
-        : d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-    };
-
-    let y = MG;
-
-    // HEADER
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
-    tc("#1a1a1a");
-    doc.text("WHISPR", MG, y);
-    y += 8;
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    tc("#555555");
-    doc.text("Interview Feedback Summary", MG, y);
-    y += 6;
-
-    dc("#cccccc");
-    doc.line(MG, y, PW - MG, y);
-    y += 5;
-
-    doc.setFontSize(9);
-    tc("#333333");
-    doc.text([jobRole, experienceLevel, techStack].filter(Boolean).join(" | ") || "—", MG, y);
-    y += 5;
-
-    tc("#555555");
-    const skippedCount = items.length - answered.length;
-    doc.text(
-      `${fmtDate(interviewDate)} | Total Questions: ${items.length} | Answered: ${answered.length} | Skipped: ${skippedCount}`,
-      MG,
-      y
-    );
-    y += 10;
-
-    // SCORE SECTION
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    tc("#888888");
-    doc.text("OVERALL SCORE", MG, y);
-    y += 5;
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    tc("#1a1a1a");
-    doc.text(`${(avgScore / 10).toFixed(1)} / 10`, MG, y);
-    y += 12;
-
-    // TABLE SECTION LABEL
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    tc("#888888");
-    doc.text("QUESTION BREAKDOWN", MG, y);
-    y += 6;
-
-    // Column layout: # (10mm) | Question (90mm) | Score (15mm) | Gap (55mm) = 170mm
-    const X_NUM = MG;       // 20 — # column left edge
-    const X_QT = MG + 10;   // 30 — question text left edge
-    const X_SR = MG + 115;  // 135 — score right edge (right-aligned)
-    const X_GP = MG + 115;  // 135 — gap text left edge
-
-    items.forEach((item, idx) => {
-      if (y + ROW_H > CONTENT_MAX) {
-        doc.addPage();
-        y = MG;
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
-        tc("#888888");
-        doc.text("QUESTION BREAKDOWN (continued)", MG, y);
-        y += 6;
-      }
-
-      const rowTop = y;
-      const textY = rowTop + 5;
-
-      if (idx % 2 === 1) {
-        fc("#f9f9f9");
-        doc.rect(MG, rowTop, CW, ROW_H, "F");
-      }
-
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8);
-      tc("#333333");
-      doc.text(String(idx + 1), X_NUM, textY);
-
-      let qText = item.questionText;
-      if (qText.length > 60) qText = qText.slice(0, 60) + "...";
-      doc.text(qText, X_QT, textY);
-
-      if (item.userAnswer) {
-        const qs = item.userAnswer.score / 10;
-        tc(qs >= 7 ? "#16a34a" : qs >= 4 ? "#d97706" : "#dc2626");
-        doc.text(qs.toFixed(1), X_SR, textY, { align: "right" });
-      } else {
-        tc("#888888");
-        doc.text("SKIP", X_SR, textY, { align: "right" });
-      }
-
-      let gapText = "";
-      if (item.userAnswer?.aiFeedback) {
-        try {
-          const parsed = JSON.parse(item.userAnswer.aiFeedback) as { gaps?: unknown[] };
-          if (Array.isArray(parsed.gaps) && parsed.gaps.length > 0) {
-            gapText = String(parsed.gaps[0]);
-            if (gapText.length > 50) gapText = gapText.slice(0, 50) + "...";
-          }
-        } catch {
-          // fallback: empty string
-        }
-      }
-      tc("#555555");
-      doc.text(gapText, X_GP, textY);
-
-      dc("#e5e5e5");
-      doc.line(MG, rowTop + ROW_H, PW - MG, rowTop + ROW_H);
-
-      y += ROW_H;
-    });
-
-    // FOOTER on all pages
-    const totalPgs = doc.getNumberOfPages();
-    for (let p = 1; p <= totalPgs; p++) {
-      doc.setPage(p);
-      const fy = PH - 10;
-      dc("#cccccc");
-      doc.line(MG, fy - 5, PW - MG, fy - 5);
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8);
-      tc("#aaaaaa");
-      doc.text("Generated by Whispr — whispr.app", PW / 2, fy, { align: "center" });
-      doc.text(`Page ${p} of ${totalPgs}`, PW - MG, fy, { align: "right" });
-    }
-
-    let dateSlug: string;
-    try {
-      dateSlug = new Date(interviewDate || Date.now()).toISOString().split("T")[0];
-    } catch {
-      dateSlug = new Date().toISOString().split("T")[0];
-    }
-    const roleSlug = (jobRole || "interview").toLowerCase().replace(/\s+/g, "-");
-    doc.save(`whispr-feedback-${roleSlug}-${dateSlug}.pdf`);
-  };
-
   if (loading) {
     return (
       <main className="min-h-screen bg-[#0a0a0b] text-[#f0ede8] flex items-center justify-center">
@@ -380,27 +221,14 @@ export default function FeedbackPage() {
                 Your <em className="italic text-[#d4a03a]">results.</em>
               </h1>
             </div>
-            <button
-              onClick={handleExport}
-              className="flex items-center gap-2 border border-white/[0.12] text-[#7a7870] hover:text-[#f0ede8] text-xs uppercase tracking-[0.1em] px-5 py-2 transition-colors flex-shrink-0 mt-1"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              Export Summary
-            </button>
+            <ExportButton
+              items={items}
+              jobRole={jobRole}
+              techStack={techStack}
+              experienceLevel={experienceLevel}
+              interviewDate={interviewDate}
+              userName={userName}
+            />
           </div>
 
           {/* SCORE RING + STATS */}
