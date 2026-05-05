@@ -86,6 +86,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    if (userAnswerText === "SKIPPED") {
+      await db.insert(userAnswers).values({
+        questionId,
+        userAnswerText: "SKIPPED",
+        aiFeedback: "This question was skipped.",
+        score: 0,
+        skipped: true,
+        technicalScore: null,
+        clarityScore: null,
+        depthScore: null,
+        confidenceScore: null,
+      });
+      await db.update(mockInterviews).set({ status: "in_progress" }).where(eq(mockInterviews.id, interview.id));
+      return NextResponse.json({ feedback: "This question was skipped.", score: 0 });
+    }
+
     const completion = await withRetry(() =>
       groq.chat.completions.create({
         model: GROQ_MODEL,

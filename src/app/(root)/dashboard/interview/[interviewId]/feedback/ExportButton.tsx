@@ -6,6 +6,7 @@ interface UserAnswer {
   userAnswerText: string;
   aiFeedback: string;
   score: number;
+  skipped?: boolean;
 }
 
 interface Question {
@@ -110,23 +111,16 @@ export default function ExportButton({
       });
     };
 
-    // Overall score: average of parsed aiFeedback.score for non-skipped
-    const nonSkipped = items.filter((i) => i.userAnswer !== null);
+    // Overall score: average of userAnswer.score for non-skipped questions
+    const nonSkipped = items.filter(
+      (i) => i.userAnswer !== null && i.userAnswer!.skipped !== true
+    );
     let overallScoreStr = "N/A";
     if (nonSkipped.length > 0) {
-      let total = 0;
-      for (const item of nonSkipped) {
-        let s = 0;
-        try {
-          const p = JSON.parse(item.userAnswer!.aiFeedback) as {
-            score?: unknown;
-          };
-          s = Number(p.score) || 0;
-        } catch {
-          s = 0;
-        }
-        total += s;
-      }
+      const total = nonSkipped.reduce(
+        (sum, item) => sum + (item.userAnswer!.score || 0),
+        0
+      );
       overallScoreStr = (total / nonSkipped.length).toFixed(1);
     }
 
@@ -187,10 +181,10 @@ export default function ExportButton({
     y += 5;
 
     // Column layout: # (10mm) | Question (90mm) | Score (15mm) | Gap (55mm)
-    const X_NUM = MG;        // 20 — left edge of # col
-    const X_QT = MG + 10;    // 30 — left edge of question col
+    const X_NUM = MG;           // 20 — left edge of # col
+    const X_QT = MG + 10;       // 30 — left edge of question col
     const X_SCORE_R = MG + 115; // 135 — right edge of score col (right-aligned)
-    const X_GAP = MG + 115;  // 135 — left edge of gap col
+    const X_GAP = MG + 115;     // 135 — left edge of gap col
 
     // ── COLUMN HEADERS ───────────────────────────────────────────────────
     const HDR_H = 7;
@@ -212,40 +206,37 @@ export default function ExportButton({
 
     // ── DATA ROWS ────────────────────────────────────────────────────────
     items.forEach((item, idx) => {
-      // Parse aiFeedback
-      let parsedScore = 0;
-      let gapText = "";
-      if (item.userAnswer?.aiFeedback) {
-        try {
-          const p = JSON.parse(item.userAnswer.aiFeedback) as {
-            score?: unknown;
-            gaps?: unknown[];
-          };
-          parsedScore = Number(p.score) || 0;
-          if (Array.isArray(p.gaps) && p.gaps.length > 0) {
-            gapText = String(p.gaps[0]);
-          }
-        } catch {
-          // defaults stay
-        }
+      const isSkipped =
+        !item.userAnswer || item.userAnswer.skipped === true;
+
+      // Gap text: plain aiFeedback string, truncated at 80 chars
+      let gapText = isSkipped
+        ? "Question not attempted"
+        : item.userAnswer!.aiFeedback || "";
+      if (!isSkipped && gapText.length > 80) {
+        gapText = gapText.slice(0, 80) + "...";
       }
 
-      // Wrap question text to question col width (90mm)
+      // Wrap question text (8pt) and gap text (7pt)
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
-      const qLines = doc.splitTextToSize(item.questionText, 90) as string[];
+      const wrappedQuestion = doc.splitTextToSize(
+        item.questionText,
+        90
+      ) as string[];
 
-      // Wrap gap text to gap col width (52mm), max 2 lines
       doc.setFontSize(7);
-      const gapLines = (doc.splitTextToSize(gapText, 52) as string[]).slice(
-        0,
-        2
+      const wrappedGap = (
+        doc.splitTextToSize(gapText, 52) as string[]
+      ).slice(0, 2);
+
+      const rowHeight = Math.max(
+        10,
+        Math.max(wrappedQuestion.length, wrappedGap.length) * 5 + 4
       );
 
-      const rowH = Math.max(8, qLines.length * 5);
-
       // Page overflow: add new page if row won't fit
-      if (y + rowH > CONTENT_MAX) {
+      if (y + rowHeight > CONTENT_MAX) {
         doc.addPage();
         drawHeader();
         y = 44;
@@ -263,7 +254,7 @@ export default function ExportButton({
 
       // Alternating row backgrounds
       fc(idx % 2 === 0 ? "#ffffff" : "#f7f5f0");
-      doc.rect(MG, rowTop, CW, rowH, "F");
+      doc.rect(MG, rowTop, CW, rowHeight, "F");
 
       // # column
       doc.setFont("helvetica", "normal");
@@ -273,37 +264,37 @@ export default function ExportButton({
 
       // Question text (wrapped)
       tc("#1a1a1a");
-      qLines.forEach((line, li) => {
+      wrappedQuestion.forEach((line, li) => {
         doc.text(line, X_QT, textY + li * 5);
       });
 
       // Score column
-      if (item.userAnswer) {
-        const qs = parsedScore;
+      if (isSkipped) {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8);
+        doc.setTextColor(170, 170, 170);
+        doc.text("SKIP", X_SCORE_R, textY, { align: "right" });
+      } else {
+        const qs = item.userAnswer!.score;
         doc.setFont("helvetica", "bold");
         doc.setFontSize(8);
         tc(qs >= 7 ? "#16a34a" : qs >= 4 ? "#d4a03a" : "#dc2626");
         doc.text(qs.toFixed(1), X_SCORE_R, textY, { align: "right" });
-      } else {
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(8);
-        tc("#aaaaaa");
-        doc.text("SKIP", X_SCORE_R, textY, { align: "right" });
       }
 
       // Gap column (wrapped, ≤2 lines)
       doc.setFont("helvetica", "normal");
       doc.setFontSize(7);
       tc("#666666");
-      gapLines.forEach((line, li) => {
+      wrappedGap.forEach((line, li) => {
         doc.text(line, X_GAP + 2, textY + li * 5);
       });
 
       // Row bottom border
       dc("#e5e5e5");
-      doc.line(MG, rowTop + rowH, MG + CW, rowTop + rowH);
+      doc.line(MG, rowTop + rowHeight, MG + CW, rowTop + rowHeight);
 
-      y += rowH;
+      y += rowHeight;
     });
 
     // ── FOOTERS (all pages) ──────────────────────────────────────────────
