@@ -13,24 +13,20 @@ async function signIn(page: Page) {
   const emailInput = page.locator("input[name='identifier'], input[type='email']").first();
   await emailInput.waitFor({ state: "visible", timeout: 15000 });
   await emailInput.fill(TEST_EMAIL);
+  await page.keyboard.press("Enter");
 
-  const continueBtn = page.locator("button[type='submit']").first();
-  await continueBtn.click();
-
-  const passwordInput = page.locator("input[name='password'], input[type='password']").first();
+  const passwordInput = page.locator("input[name='password']").first();
   await passwordInput.waitFor({ state: "visible", timeout: 15000 });
-  await passwordInput.waitFor({ state: "attached", timeout: 15000 });
   await page.waitForFunction(
     () => {
-      const input = document.querySelector("input[name='password'], input[type='password']") as HTMLInputElement;
+      const input = document.querySelector("input[name='password']") as HTMLInputElement;
       return input && !input.disabled;
     },
     { timeout: 15000 }
   );
   await passwordInput.fill(TEST_PASSWORD);
+  await page.keyboard.press("Enter");
 
-  const signInBtn = page.locator("button[type='submit']").first();
-  await signInBtn.click();
   await page.waitForURL(`${BASE_URL}/dashboard`, { timeout: 20000 });
 }
 
