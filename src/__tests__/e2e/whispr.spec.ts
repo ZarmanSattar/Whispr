@@ -214,7 +214,8 @@ test("37. PDF export - Export Summary button triggers download", async ({ page }
   // Find first completed interview and navigate to its feedback
   const feedbackLink = page.locator("a[href*='/feedback']").first();
   if (await feedbackLink.isVisible({ timeout: 5000 })) {
-    const [download] = await Promise.all([
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_download] = await Promise.all([
       page.waitForEvent("download", { timeout: 10000 }).catch(() => null),
       feedbackLink.click(),
     ]);

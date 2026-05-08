@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { NextResponse } from "next/server";
 
 // ─── Mock Clerk auth ──────────────────────────────────────────────────────────
 vi.mock("@clerk/nextjs/server", () => ({
@@ -222,7 +221,8 @@ describe("GET /api/education", () => {
   it("returns 401 when not authenticated", async () => {
     mockAuth.mockResolvedValue({ userId: null });
     const { GET } = await import("@/app/api/education/route");
-    const req = new Request("http://localhost/api/education");
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _req = new Request("http://localhost/api/education");
     const res = await GET();
     expect(res.status).toBe(401);
   });
