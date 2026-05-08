@@ -10,19 +10,28 @@ async function signIn(page: Page) {
   await page.goto(`${BASE_URL}/sign-in`);
   await page.waitForLoadState("networkidle");
 
-  const emailInput = page.locator("input[type='email'], input[name='identifier'], input[placeholder*='email' i]").first();
+  const emailInput = page.locator("input[name='identifier'], input[type='email']").first();
+  await emailInput.waitFor({ state: "visible", timeout: 15000 });
   await emailInput.fill(TEST_EMAIL);
 
-  const continueBtn = page.locator("button").filter({ hasText: /continue|next/i }).first();
-  if (await continueBtn.isVisible()) await continueBtn.click();
+  const continueBtn = page.locator("button[type='submit']").first();
+  await continueBtn.click();
 
-  const passwordInput = page.locator("input[type='password']").first();
-  await passwordInput.waitFor({ state: "visible" });
+  const passwordInput = page.locator("input[name='password'], input[type='password']").first();
+  await passwordInput.waitFor({ state: "visible", timeout: 15000 });
+  await passwordInput.waitFor({ state: "attached", timeout: 15000 });
+  await page.waitForFunction(
+    () => {
+      const input = document.querySelector("input[name='password'], input[type='password']") as HTMLInputElement;
+      return input && !input.disabled;
+    },
+    { timeout: 15000 }
+  );
   await passwordInput.fill(TEST_PASSWORD);
 
-  const signInBtn = page.locator("button[type='submit'], button").filter({ hasText: /sign in|continue/i }).first();
+  const signInBtn = page.locator("button[type='submit']").first();
   await signInBtn.click();
-  await page.waitForURL(`${BASE_URL}/dashboard`, { timeout: 15000 });
+  await page.waitForURL(`${BASE_URL}/dashboard`, { timeout: 20000 });
 }
 
 // ─── Helper: create a new interview ──────────────────────────────────────────
