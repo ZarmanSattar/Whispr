@@ -177,7 +177,7 @@ export default function NewInterviewPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
-          questionCount: Math.min(Math.max(parseInt(questionCount) || 5, 1), 50),
+          questionCount: Math.min(Math.max(parseInt(questionCount) || 5, 1), 20),
         }),
       });
 
@@ -289,10 +289,10 @@ export default function NewInterviewPage() {
             <input
               type="number"
               min={1}
-              max={50}
+              max={20}
               value={questionCount}
               onChange={(e) => setQuestionCount(e.target.value)}
-              onBlur={() => { const n = parseInt(questionCount); setQuestionCount(String(isNaN(n) ? 5 : Math.min(Math.max(n, 1), 50))); }}
+              onBlur={() => { const n = parseInt(questionCount); setQuestionCount(String(isNaN(n) ? 5 : Math.min(Math.max(n, 1), 20))); }}
               className="w-24 bg-[#111114] border border-white/[0.08] focus:border-[#d4a03a]/50 text-[#f0ede8] text-sm px-3 py-2 outline-none"
             />
           </div>

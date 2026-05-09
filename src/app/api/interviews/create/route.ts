@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     }
 
     const { jobRole, techStack, experienceLevel, questionCount, interviewType, targetCompany } = await req.json();
-    const count = Math.min(Math.max(isNaN(Number(questionCount)) ? 5 : Number(questionCount), 1), 50);
+    const count = Math.min(Math.max(isNaN(Number(questionCount)) ? 5 : Number(questionCount), 1), 20);
 
     const completion = await withRetry(() =>
       groq.chat.completions.create({
