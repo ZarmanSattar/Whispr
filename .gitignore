@@ -26,4 +26,5 @@ npm-debug.log*
 
 # Misc
 *.pem
-.turbo
+.turbotest-results/  
+playwright-report/ 
