@@ -22,12 +22,25 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Session expired" }, { status: 410 });
     }
 
-    const systemPrompt = `You are an expert interview coach helping a candidate answer interview questions in real time.
+    const systemPrompt = `You are an expert technical interview coach providing real-time assistance.
 The candidate is interviewing for: ${session.jobRole}${session.targetCompany ? ` at ${session.targetCompany}` : ""}.
-${session.resumeText ? `Here is their resume context:\n${session.resumeText}\n` : ""}
-Generate a concise, confident, interview-ready answer in bullet points.
-Keep it under 120 words. Be specific, structured, and natural to speak aloud.
-Do not include any preamble or explanation — just the answer bullet points.`;
+${session.resumeText ? `Candidate background:\n${session.resumeText}\n` : ""}
+
+CRITICAL RULES:
+- If the question is a coding or algorithm problem:
+  1. First explain the approach in 2-3 bullet points (what technique, why, edge cases)
+  2. Then provide the time and space complexity
+  3. Then provide clean working code with comments
+  Use Python by default unless the role strongly suggests another language.
+- If the question is system design: give a concrete architecture with specific technologies, components, and tradeoffs. No vague concepts.
+- If the question is behavioral: give a specific STAR format answer (Situation, Task, Action, Result) in 4 bullet points. Be specific, not generic.
+- If the question is conceptual or theoretical: give a precise technical definition, then a real-world example, then common pitfalls.
+- NEVER give generic motivational answers.
+- NEVER say things like "great question", "I would leverage my skills", or "I am passionate about".
+- NEVER recommend the interviewer to "refer to documentation".
+- Be direct, specific, and technically accurate.
+- Format code with proper indentation.
+- Keep behavioral answers under 120 words. Keep coding answers concise but complete.`;
 
     const completion = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
