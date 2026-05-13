@@ -7,7 +7,7 @@
 # Test info
 
 - Name: whispr.spec.ts >> 31. Full interview flow - create, answer all, reach feedback
-- Location: src\__tests__\e2e\whispr.spec.ts:51:5
+- Location: src\__tests__\e2e\whispr.spec.ts:52:5
 
 # Error details
 
@@ -15,12 +15,12 @@
 Error: expect(page).toHaveURL(expected) failed
 
 Expected pattern: /\/feedback/
-Received string:  "https://interview-woad-rho.vercel.app/dashboard/interview/26907a29-b5df-40c7-999f-820c2994de5d"
+Received string:  "https://interview-woad-rho.vercel.app/dashboard/interview/666a27c4-08bc-4c11-89c4-8b40409f1cee"
 Timeout: 30000ms
 
 Call log:
   - Expect "toHaveURL" with timeout 30000ms
-    33 × unexpected value "https://interview-woad-rho.vercel.app/dashboard/interview/26907a29-b5df-40c7-999f-820c2994de5d"
+    33 × unexpected value "https://interview-woad-rho.vercel.app/dashboard/interview/666a27c4-08bc-4c11-89c4-8b40409f1cee"
 
 ```
 
@@ -42,7 +42,7 @@ Call log:
           - generic [ref=e14]: Question 3
           - generic [ref=e15]: Medium
         - generic [ref=e16]: 1:30
-      - heading "You are tasked with optimizing the performance of a slow React component. Walk me through the steps you would take to identify the bottleneck and what optimizations you would consider implementing" [level=1] [ref=e17]
+      - heading "How do you handle state management in a React application, and what are some tradeoffs to consider when choosing a state management library?" [level=1] [ref=e17]
       - button "Show Hint" [ref=e19] [cursor=pointer]:
         - img [ref=e20]
         - text: Show Hint
@@ -89,152 +89,153 @@ Call log:
   28  |   await page.waitForURL(`${BASE_URL}/dashboard`, { timeout: 20000 });
   29  | }
   30  | 
-  31  | async function createInterview(page: Page, questionCount = 3) {
-  32  |   await page.goto(`${BASE_URL}/dashboard/new`);
-  33  |   await page.waitForLoadState("networkidle");
-  34  | 
-  35  |   const roleInput = page.locator("input").first();
-  36  |   await roleInput.fill("Software Engineer");
-  37  | 
-  38  |   const stackInput = page.locator("input").nth(1);
-  39  |   await stackInput.fill("React");
-  40  | 
-  41  |   await page.locator("button").filter({ hasText: /^Junior$/i }).first().click();
-  42  | 
-  43  |   await page.locator("button").filter({ hasText: /^5$/ }).first().click();
-  44  | 
-  45  |   await page.locator("button").filter({ hasText: /generate interview/i }).first().click();
-  46  | 
-  47  |   await page.waitForURL(`${BASE_URL}/dashboard/interview/**`, { timeout: 60000 });
-  48  |   await page.waitForLoadState("networkidle");
-  49  | }
-  50  | 
-  51  | test("31. Full interview flow - create, answer all, reach feedback", async ({ page }) => {
-  52  |   await signIn(page);
-  53  |   await createInterview(page, 2);
-  54  | 
-  55  |   const textModeBtn = page.locator("button").filter({ hasText: /type instead/i }).first();
-  56  |   if (await textModeBtn.isVisible({ timeout: 5000 })) {
-  57  |     await textModeBtn.click();
-  58  |   }
-  59  | 
-  60  |   for (let i = 0; i < 2; i++) {
-  61  |     const textModeBtn2 = page.locator("button").filter({ hasText: /type instead/i }).first();
-  62  |     if (await textModeBtn2.isVisible({ timeout: 5000 })) await textModeBtn2.click();
-  63  | 
-  64  |     const textarea = page.locator("textarea").first();
-  65  |     if (await textarea.isVisible({ timeout: 10000 })) {
-  66  |       await textarea.fill("This is my test answer for this question about the topic being asked.");
-  67  |       const submitBtn = page.locator("button").filter({ hasText: /submit/i }).first();
-  68  |       await submitBtn.click();
-  69  |     }
-  70  | 
-  71  |     await page.waitForTimeout(3000);
-  72  |     const nextBtn = page.locator("button").filter({ hasText: /next|finish|continue|question/i }).first();
-  73  |     const isVisible = await nextBtn.isVisible({ timeout: 45000 });
-  74  |     if (isVisible) await nextBtn.click();
-  75  |   }
-  76  | 
-> 77  |   await expect(page).toHaveURL(/\/feedback/, { timeout: 30000 });
+  31  | // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  32  | async function createInterview(page: Page, questionCount = 3) {
+  33  |   await page.goto(`${BASE_URL}/dashboard/new`);
+  34  |   await page.waitForLoadState("networkidle");
+  35  | 
+  36  |   const roleInput = page.locator("input").first();
+  37  |   await roleInput.fill("Software Engineer");
+  38  | 
+  39  |   const stackInput = page.locator("input").nth(1);
+  40  |   await stackInput.fill("React");
+  41  | 
+  42  |   await page.locator("button").filter({ hasText: /^Junior$/i }).first().click();
+  43  | 
+  44  |   await page.locator("button").filter({ hasText: /^5$/ }).first().click();
+  45  | 
+  46  |   await page.locator("button").filter({ hasText: /generate interview/i }).first().click();
+  47  | 
+  48  |   await page.waitForURL(`${BASE_URL}/dashboard/interview/**`, { timeout: 60000 });
+  49  |   await page.waitForLoadState("networkidle");
+  50  | }
+  51  | 
+  52  | test("31. Full interview flow - create, answer all, reach feedback", async ({ page }) => {
+  53  |   await signIn(page);
+  54  |   await createInterview(page, 2);
+  55  | 
+  56  |   const textModeBtn = page.locator("button").filter({ hasText: /type instead/i }).first();
+  57  |   if (await textModeBtn.isVisible({ timeout: 5000 })) {
+  58  |     await textModeBtn.click();
+  59  |   }
+  60  | 
+  61  |   for (let i = 0; i < 2; i++) {
+  62  |     const textModeBtn2 = page.locator("button").filter({ hasText: /type instead/i }).first();
+  63  |     if (await textModeBtn2.isVisible({ timeout: 5000 })) await textModeBtn2.click();
+  64  | 
+  65  |     const textarea = page.locator("textarea").first();
+  66  |     if (await textarea.isVisible({ timeout: 10000 })) {
+  67  |       await textarea.fill("This is my test answer for this question about the topic being asked.");
+  68  |       const submitBtn = page.locator("button").filter({ hasText: /submit/i }).first();
+  69  |       await submitBtn.click();
+  70  |     }
+  71  | 
+  72  |     await page.waitForTimeout(3000);
+  73  |     const nextBtn = page.locator("button").filter({ hasText: /next|finish|continue|question/i }).first();
+  74  |     const isVisible = await nextBtn.isVisible({ timeout: 45000 });
+  75  |     if (isVisible) await nextBtn.click();
+  76  |   }
+  77  | 
+> 78  |   await expect(page).toHaveURL(/\/feedback/, { timeout: 30000 });
       |                      ^ Error: expect(page).toHaveURL(expected) failed
-  78  | });
-  79  | 
-  80  | test("32. Skip question - shows score 0 on feedback", async ({ page }) => {
-  81  |   await signIn(page);
-  82  |   await createInterview(page, 2);
-  83  | 
-  84  |   const skipBtn = page.locator("button").filter({ hasText: /skip/i }).first();
-  85  |   await skipBtn.waitFor({ state: "visible", timeout: 10000 });
-  86  |   await skipBtn.click();
-  87  | 
-  88  |   const textModeBtn = page.locator("button").filter({ hasText: /type instead/i }).first();
-  89  |   if (await textModeBtn.isVisible({ timeout: 5000 })) await textModeBtn.click();
-  90  | 
-  91  |   const textarea = page.locator("textarea").first();
-  92  |   if (await textarea.isVisible({ timeout: 10000 })) {
-  93  |     await textarea.fill("Test answer for the second question.");
-  94  |     await page.locator("button").filter({ hasText: /submit/i }).first().click();
-  95  |   }
-  96  | 
-  97  |   await page.waitForTimeout(3000);
-  98  |   const nextAfterAnswer = page.locator("button").filter({ hasText: /next|finish|continue|question/i }).first();
-  99  |   if (await nextAfterAnswer.isVisible({ timeout: 30000 })) await nextAfterAnswer.click();
-  100 | 
-  101 |   await page.waitForURL(/\/feedback/, { timeout: 60000 });
-  102 | 
-  103 |   await expect(page.locator("text=/skip/i").first()).toBeVisible({ timeout: 5000 });
-  104 | });
-  105 | 
-  106 | test("33. Timer is visible during interview", async ({ page }) => {
-  107 |   await signIn(page);
-  108 |   await createInterview(page, 1);
-  109 | 
-  110 |   const timer = page.locator("text=/\\d+:\\d{2}/").first();
-  111 |   await expect(timer).toBeVisible({ timeout: 10000 });
-  112 | });
-  113 | 
-  114 | test("34. Text mode fallback - answer submitted correctly", async ({ page }) => {
-  115 |   await signIn(page);
-  116 |   await createInterview(page, 1);
-  117 | 
-  118 |   const textModeBtn = page.locator("button").filter({ hasText: /type instead/i }).first();
-  119 |   await textModeBtn.waitFor({ state: "visible", timeout: 10000 });
-  120 |   await textModeBtn.click();
-  121 | 
-  122 |   const textarea = page.locator("textarea").first();
-  123 |   await expect(textarea).toBeVisible({ timeout: 5000 });
-  124 | 
-  125 |   await textarea.fill("This is my typed answer using text mode fallback for the question.");
-  126 |   const submitBtn = page.locator("button").filter({ hasText: /submit/i }).first();
-  127 |   await expect(submitBtn).toBeVisible();
-  128 |   await submitBtn.click();
-  129 | 
-  130 |   const nextBtn = page.locator("button").filter({ hasText: /next question|finish/i }).first();
-  131 |   await nextBtn.waitFor({ state: "visible", timeout: 30000 });
-  132 |   expect(true).toBe(true);
-  133 | });
-  134 | 
-  135 | test("35. Re-record button clears transcript and returns to intro", async ({ page }) => {
-  136 |   await signIn(page);
-  137 |   await createInterview(page, 1);
-  138 | 
-  139 |   const textModeBtn = page.locator("button").filter({ hasText: /type instead/i }).first();
-  140 |   await textModeBtn.waitFor({ state: "visible", timeout: 10000 });
-  141 |   await textModeBtn.click();
-  142 | 
-  143 |   const textarea = page.locator("textarea").first();
-  144 |   await textarea.fill("Initial answer text.");
-  145 | 
-  146 |   const reRecordBtn = page.locator("button").filter({ hasText: /re-record|record again/i }).first();
-  147 |   if (await reRecordBtn.isVisible({ timeout: 3000 })) {
-  148 |     await reRecordBtn.click();
-  149 |     await expect(textarea).toHaveValue("", { timeout: 3000 });
-  150 |   }
-  151 | });
-  152 | 
-  153 | test("36. Exit confirmation modal blocks navigation mid-interview", async ({ page }) => {
-  154 |   await signIn(page);
-  155 |   await createInterview(page, 2);
-  156 | 
-  157 |   const exitBtn = page.locator("button, a").filter({ hasText: /exit|leave|back/i }).first();
-  158 |   await exitBtn.waitFor({ state: "visible", timeout: 10000 });
-  159 |   await exitBtn.click();
-  160 | 
-  161 |   const modal = page.locator("text=Leave interview").first();
-  162 |   await expect(modal).toBeVisible({ timeout: 5000 });
-  163 | 
-  164 |   const cancelBtn = page.locator("button").filter({ hasText: /cancel|stay/i }).first();
-  165 |   await cancelBtn.click();
-  166 |   await expect(modal).not.toBeVisible({ timeout: 3000 });
-  167 | });
-  168 | 
-  169 | test("37. PDF export - Export Summary button triggers download", async ({ page }) => {
-  170 |   await signIn(page);
-  171 | 
-  172 |   await page.goto(`${BASE_URL}/dashboard`);
-  173 |   await page.waitForLoadState("networkidle");
-  174 | 
-  175 |   const feedbackLink = page.locator("a[href*='/feedback']").first();
-  176 |   if (await feedbackLink.isVisible({ timeout: 5000 })) {
-  177 |     // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  79  | });
+  80  | 
+  81  | test("32. Skip question - shows score 0 on feedback", async ({ page }) => {
+  82  |   await signIn(page);
+  83  |   await createInterview(page, 2);
+  84  | 
+  85  |   const skipBtn = page.locator("button").filter({ hasText: /skip/i }).first();
+  86  |   await skipBtn.waitFor({ state: "visible", timeout: 10000 });
+  87  |   await skipBtn.click();
+  88  | 
+  89  |   const textModeBtn = page.locator("button").filter({ hasText: /type instead/i }).first();
+  90  |   if (await textModeBtn.isVisible({ timeout: 5000 })) await textModeBtn.click();
+  91  | 
+  92  |   const textarea = page.locator("textarea").first();
+  93  |   if (await textarea.isVisible({ timeout: 10000 })) {
+  94  |     await textarea.fill("Test answer for the second question.");
+  95  |     await page.locator("button").filter({ hasText: /submit/i }).first().click();
+  96  |   }
+  97  | 
+  98  |   await page.waitForTimeout(3000);
+  99  |   const nextAfterAnswer = page.locator("button").filter({ hasText: /next|finish|continue|question/i }).first();
+  100 |   if (await nextAfterAnswer.isVisible({ timeout: 30000 })) await nextAfterAnswer.click();
+  101 | 
+  102 |   await page.waitForURL(/\/feedback/, { timeout: 60000 });
+  103 | 
+  104 |   await expect(page.locator("text=/skip/i").first()).toBeVisible({ timeout: 5000 });
+  105 | });
+  106 | 
+  107 | test("33. Timer is visible during interview", async ({ page }) => {
+  108 |   await signIn(page);
+  109 |   await createInterview(page, 1);
+  110 | 
+  111 |   const timer = page.locator("text=/\\d+:\\d{2}/").first();
+  112 |   await expect(timer).toBeVisible({ timeout: 10000 });
+  113 | });
+  114 | 
+  115 | test("34. Text mode fallback - answer submitted correctly", async ({ page }) => {
+  116 |   await signIn(page);
+  117 |   await createInterview(page, 1);
+  118 | 
+  119 |   const textModeBtn = page.locator("button").filter({ hasText: /type instead/i }).first();
+  120 |   await textModeBtn.waitFor({ state: "visible", timeout: 10000 });
+  121 |   await textModeBtn.click();
+  122 | 
+  123 |   const textarea = page.locator("textarea").first();
+  124 |   await expect(textarea).toBeVisible({ timeout: 5000 });
+  125 | 
+  126 |   await textarea.fill("This is my typed answer using text mode fallback for the question.");
+  127 |   const submitBtn = page.locator("button").filter({ hasText: /submit/i }).first();
+  128 |   await expect(submitBtn).toBeVisible();
+  129 |   await submitBtn.click();
+  130 | 
+  131 |   const nextBtn = page.locator("button").filter({ hasText: /next question|finish/i }).first();
+  132 |   await nextBtn.waitFor({ state: "visible", timeout: 30000 });
+  133 |   expect(true).toBe(true);
+  134 | });
+  135 | 
+  136 | test("35. Re-record button clears transcript and returns to intro", async ({ page }) => {
+  137 |   await signIn(page);
+  138 |   await createInterview(page, 1);
+  139 | 
+  140 |   const textModeBtn = page.locator("button").filter({ hasText: /type instead/i }).first();
+  141 |   await textModeBtn.waitFor({ state: "visible", timeout: 10000 });
+  142 |   await textModeBtn.click();
+  143 | 
+  144 |   const textarea = page.locator("textarea").first();
+  145 |   await textarea.fill("Initial answer text.");
+  146 | 
+  147 |   const reRecordBtn = page.locator("button").filter({ hasText: /re-record|record again/i }).first();
+  148 |   if (await reRecordBtn.isVisible({ timeout: 3000 })) {
+  149 |     await reRecordBtn.click();
+  150 |     await expect(textarea).toHaveValue("", { timeout: 3000 });
+  151 |   }
+  152 | });
+  153 | 
+  154 | test("36. Exit confirmation modal blocks navigation mid-interview", async ({ page }) => {
+  155 |   await signIn(page);
+  156 |   await createInterview(page, 2);
+  157 | 
+  158 |   const exitBtn = page.locator("button, a").filter({ hasText: /exit|leave|back/i }).first();
+  159 |   await exitBtn.waitFor({ state: "visible", timeout: 10000 });
+  160 |   await exitBtn.click();
+  161 | 
+  162 |   const modal = page.locator("text=Leave interview").first();
+  163 |   await expect(modal).toBeVisible({ timeout: 5000 });
+  164 | 
+  165 |   const cancelBtn = page.locator("button").filter({ hasText: /cancel|stay/i }).first();
+  166 |   await cancelBtn.click();
+  167 |   await expect(modal).not.toBeVisible({ timeout: 3000 });
+  168 | });
+  169 | 
+  170 | test("37. PDF export - Export Summary button triggers download", async ({ page }) => {
+  171 |   await signIn(page);
+  172 | 
+  173 |   await page.goto(`${BASE_URL}/dashboard`);
+  174 |   await page.waitForLoadState("networkidle");
+  175 | 
+  176 |   const feedbackLink = page.locator("a[href*='/feedback']").first();
+  177 |   if (await feedbackLink.isVisible({ timeout: 5000 })) {
+  178 |     // eslint-disable-next-line @typescript-eslint/no-unused-vars
 ```

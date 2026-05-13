@@ -64,3 +64,22 @@ export const userProgress = pgTable("user_progress", {
   completedAt: timestamp("completed_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
+export const liveSessions = pgTable("live_sessions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id").notNull(),
+  code: text("code").notNull().unique(),
+  jobRole: text("job_role").notNull(),
+  targetCompany: text("target_company"),
+  resumeText: text("resume_text"),
+  status: text("status").default("active").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at").notNull(),
+});
+
+export const liveAnswers = pgTable("live_answers", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  sessionId: uuid("session_id").references(() => liveSessions.id),
+  questionText: text("question_text").notNull(),
+  answerText: text("answer_text").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});

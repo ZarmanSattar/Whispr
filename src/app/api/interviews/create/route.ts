@@ -17,7 +17,7 @@ function checkRateLimit(userId: string): boolean {
     rateLimitMap.set(userId, { count: 1, resetAt: now + 60_000 });
     return true;
   }
-  if (entry.count >= 10) return false;
+  if (entry.count >= 20) return false;
   entry.count++;
   return true;
 }

@@ -358,12 +358,21 @@ export default function DashboardClient({
               Start a new mock interview or review your past sessions below.
             </p>
           </div>
-          <Link
-            href="/dashboard/new"
-            className="flex-shrink-0 bg-[#d4a03a] text-[#0a0a0b] text-xs font-medium tracking-[0.1em] uppercase px-8 py-3.5 hover:bg-[#f0c060] transition-all hover:-translate-y-px hover:shadow-[0_8px_30px_rgba(212,160,58,0.3)]"
-          >
-            + New interview
-          </Link>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <Link
+              href="/dashboard/live"
+              className="flex items-center gap-2 border border-[#d4a03a]/30 text-[#d4a03a] text-xs font-medium tracking-[0.1em] uppercase px-5 py-3.5 hover:bg-[#d4a03a]/10 transition-all"
+            >
+              <div className="w-1.5 h-1.5 rounded-full bg-[#d4a03a] animate-pulse" />
+              Live Mode
+            </Link>
+            <Link
+              href="/dashboard/new"
+              className="bg-[#d4a03a] text-[#8686a1] text-xs font-medium tracking-[0.1em] uppercase px-8 py-3.5 hover:bg-[#f0c060] transition-all hover:-translate-y-px hover:shadow-[0_8px_30px_rgba(212,160,58,0.3)]"
+            >
+              + New interview
+            </Link>
+          </div>
         </div>
 
         {/* STATS ROW — animated count-up */}
