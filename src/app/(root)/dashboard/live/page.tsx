@@ -1,8 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
+
+const MEETING_SUGGESTIONS = [
+  "Software Engineer Interview",
+  "Frontend Engineer Interview",
+  "Backend Engineer Interview",
+  "Full Stack Engineer Interview",
+  "Product Manager Interview",
+  "Data Scientist Interview",
+  "DevOps Engineer Interview",
+  "Client Sales Call",
+  "Team Standup",
+  "Sprint Planning",
+  "Performance Review",
+  "Investor Meeting",
+  "General Meeting",
+];
 
 export default function LiveModePage() {
   const { user } = useUser();
@@ -14,21 +30,35 @@ export default function LiveModePage() {
   const [sessionCode, setSessionCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const resumeText = (user?.publicMetadata?.resumeText as string) || "";
 
-  async function handleStart() {
-    if (!jobRole.trim()) {
-      setError("Job role is required.");
-      return;
+  const filteredSuggestions = MEETING_SUGGESTIONS.filter((s) =>
+    s.toLowerCase().includes(jobRole.toLowerCase())
+  );
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
     }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  async function handleStart() {
     setError("");
     setLoading(true);
+    const roleToSend = jobRole.trim() || "General Meeting";
     try {
       const res = await fetch("/api/live/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobRole, targetCompany, resumeText }),
+        body: JSON.stringify({ jobRole: roleToSend, targetCompany, resumeText }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to create session");
@@ -75,14 +105,13 @@ export default function LiveModePage() {
         <div className="mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#d4a03a]/30 bg-[#d4a03a]/10 mb-6">
             <div className="w-1.5 h-1.5 rounded-full bg-[#d4a03a] animate-pulse" />
-            <span className="text-xs text-[#d4a03a] uppercase tracking-[0.12em]">Live Mode</span>
+            <span className="text-xs text-[#d4a03a] uppercase tracking-[0.12em]">Meeting Assistant</span>
           </div>
           <h1 className="font-playfair text-4xl text-[#f0ede8] mb-3">
-            Real-Time Interview Assistant
+            Your AI Meeting Assistant
           </h1>
           <p className="text-[#7a7870] text-sm leading-relaxed">
-            Start a live session and enter the code into the Whispr desktop overlay.
-            The overlay listens to your interview and generates answers in real time -- only visible to you.
+            Start a session before any meeting -- interview, client call, standup, or sales call. Enter the code into the Whispr desktop app and get real-time AI answers only you can see.
           </p>
         </div>
 
@@ -91,34 +120,55 @@ export default function LiveModePage() {
             {/* Resume status */}
             <div className={`px-4 py-3 rounded-lg border text-sm ${resumeText ? "border-[#d4a03a]/20 bg-[#d4a03a]/5 text-[#d4a03a]" : "border-white/[0.06] bg-[#111114] text-[#7a7870]"}`}>
               {resumeText
-                ? "Resume loaded -- answers will be personalized to your background."
-                : "No resume uploaded. Answers will be generic. Upload your resume in Account settings."}
+                ? "Resume loaded -- responses will be tailored to your background."
+                : "No resume found. Responses will be generic. Add your resume in Account settings."}
             </div>
 
-            {/* Job Role */}
-            <div>
+            {/* What is this meeting about */}
+            <div ref={dropdownRef} className="relative">
               <label className="block text-xs text-[#7a7870] uppercase tracking-[0.1em] mb-2">
-                Job Role <span className="text-[#d4a03a]">*</span>
+                What is this meeting about? <span className="text-[#7a7870] normal-case tracking-normal">(optional)</span>
               </label>
               <input
                 type="text"
                 value={jobRole}
-                onChange={(e) => setJobRole(e.target.value)}
-                placeholder="e.g. Senior Frontend Engineer"
+                onChange={(e) => {
+                  setJobRole(e.target.value);
+                  setDropdownOpen(true);
+                }}
+                onFocus={() => setDropdownOpen(true)}
+                placeholder="e.g. Frontend Engineer interview, Client sales call, Team standup"
                 className="w-full bg-[#111114] border border-white/[0.08] focus:border-[#d4a03a]/50 rounded-lg px-4 py-3 text-sm text-[#f0ede8] placeholder-[#7a7870]/50 outline-none transition-colors"
               />
+              {dropdownOpen && filteredSuggestions.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full bg-[#111114] border border-white/[0.08] rounded-lg overflow-hidden shadow-lg">
+                  {filteredSuggestions.map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      type="button"
+                      onMouseDown={() => {
+                        setJobRole(suggestion);
+                        setDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-[#f0ede8] hover:bg-white/[0.04] transition-colors"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Target Company */}
+            {/* Company or Context */}
             <div>
               <label className="block text-xs text-[#7a7870] uppercase tracking-[0.1em] mb-2">
-                Target Company <span className="text-[#7a7870] normal-case tracking-normal">(optional)</span>
+                Company or Context <span className="text-[#7a7870] normal-case tracking-normal">(optional)</span>
               </label>
               <input
                 type="text"
                 value={targetCompany}
                 onChange={(e) => setTargetCompany(e.target.value)}
-                placeholder="e.g. Google, Meta, Stripe"
+                placeholder="e.g. Google, Q3 Sales Review, Sprint planning"
                 className="w-full bg-[#111114] border border-white/[0.08] focus:border-[#d4a03a]/50 rounded-lg px-4 py-3 text-sm text-[#f0ede8] placeholder-[#7a7870]/50 outline-none transition-colors"
               />
             </div>
@@ -133,7 +183,7 @@ export default function LiveModePage() {
               disabled={loading}
               className="w-full bg-[#d4a03a] text-[#0a0a0b] uppercase tracking-[0.1em] text-sm font-medium py-3.5 rounded-lg hover:bg-[#f0c060] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Generating Session..." : "Start Live Session"}
+              {loading ? "Generating Session..." : "Start Session"}
             </button>
 
             {/* Download section */}
@@ -175,7 +225,7 @@ export default function LiveModePage() {
             <div className="border border-white/[0.06] rounded-xl bg-[#111114] p-6 space-y-4">
               <p className="text-xs text-[#7a7870] uppercase tracking-[0.1em]">How to use</p>
               {[
-                "Download and run the Whispr overlay app on your Windows machine.",
+                "Open the Whispr desktop app on your Windows machine.",
                 "Enter the 6-digit code shown above into the overlay.",
                 "Join your interview on Zoom, Meet, or Teams.",
                 "The overlay will listen and generate answers automatically -- only you can see it.",
@@ -191,7 +241,7 @@ export default function LiveModePage() {
             <div className="flex items-center justify-between px-4 py-3 rounded-lg border border-white/[0.06] bg-[#111114]">
               <div>
                 <p className="text-xs text-[#7a7870]">Role</p>
-                <p className="text-sm text-[#f0ede8] mt-0.5">{jobRole}</p>
+                <p className="text-sm text-[#f0ede8] mt-0.5">{jobRole || "General Meeting"}</p>
               </div>
               {targetCompany && (
                 <div>
