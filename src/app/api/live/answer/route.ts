@@ -6,20 +6,30 @@ import Groq from "groq-sdk";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: corsHeaders });
+}
+
 export async function POST(req: Request) {
   try {
     const { code, questionText } = await req.json();
 
     if (!code || !questionText) {
-      return NextResponse.json({ error: "Code and question required" }, { status: 400 });
+      return NextResponse.json({ error: "Code and question required" }, { status: 400, headers: corsHeaders });
     }
 
     const [session] = await db.select().from(liveSessions).where(eq(liveSessions.code, code));
 
-    if (!session) return NextResponse.json({ error: "Invalid code" }, { status: 404 });
+    if (!session) return NextResponse.json({ error: "Invalid code" }, { status: 404, headers: corsHeaders });
 
     if (new Date() > session.expiresAt) {
-      return NextResponse.json({ error: "Session expired" }, { status: 410 });
+      return NextResponse.json({ error: "Session expired" }, { status: 410, headers: corsHeaders });
     }
 
     const systemPrompt = `You are an expert technical interview coach providing real-time assistance.
@@ -60,9 +70,9 @@ CRITICAL RULES:
       answerText,
     });
 
-    return NextResponse.json({ answer: answerText });
+    return NextResponse.json({ answer: answerText }, { headers: corsHeaders });
   } catch (err) {
     console.error("Live answer error:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500, headers: corsHeaders });
   }
 }
