@@ -14,6 +14,9 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   try {
+    console.log("DEEPGRAM_API_KEY present:", !!process.env.DEEPGRAM_API_KEY);
+    console.log("DEEPGRAM_API_KEY length:", process.env.DEEPGRAM_API_KEY?.length);
+
     const audioBuffer = await req.arrayBuffer();
 
     if (!audioBuffer || audioBuffer.byteLength === 0) {
