@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "name": "Whispr — AI Meeting Assistant",
+  "version": "1.0.0",
+  "description": "Real-time AI answers during interviews and meetings. Only you can see them.",
+  "permissions": [
+    "microphone",
+    "storage",
+    "tabs",
+    "cookies",
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://interview-woad-rho.vercel.app/*",
+    "https://interview-git-dev-zarmansattars-projects.vercel.app/*",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "commands": {
+    "toggle-visibility": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+H"
+      },
+      "description": "Hide or show the Whispr overlay"
+    },
+    "clear-overlay": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Q"
+      },
+      "description": "Clear the Whispr overlay content"
+    }
+  }
+}

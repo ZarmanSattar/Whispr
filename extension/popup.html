@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Whispr</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div id="popup-root">
+    <div id="popup-header">
+      <span id="popup-logo">Whispr</span>
+      <div id="popup-dot"></div>
+    </div>
+
+    <div id="popup-connected" style="display:none;">
+      <div id="popup-status-row">
+        <span id="popup-status-text">Ready</span>
+      </div>
+      <div id="popup-info">
+        <p class="popup-label">Session Code</p>
+        <p class="popup-value" id="popup-session-code"></p>
+        <p class="popup-label">Record (press to start / stop)</p>
+        <p class="popup-value">Ctrl + Shift + X</p>
+        <p class="popup-label">Hide / Show overlay</p>
+        <p class="popup-value">Ctrl + Shift + H</p>
+        <p class="popup-label">Clear overlay</p>
+        <p class="popup-value">Ctrl + Shift + Q</p>
+      </div>
+      <div id="popup-actions">
+        <button id="popup-dashboard-btn">Open Dashboard</button>
+        <button id="popup-disconnect-btn">Disconnect</button>
+      </div>
+    </div>
+
+    <div id="popup-disconnected">
+      <p id="popup-desc">Connect your Whispr account to get real-time AI answers during interviews and meetings.</p>
+      <input type="text" id="popup-code-input" placeholder="Enter 6-digit session code" maxlength="6" />
+      <button id="popup-connect-btn">Connect to Whispr</button>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,207 @@
+/* ── Whispr Extension — Popup Styles ─────────────────────────────────────── */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 280px;
+  background: #0a0a0b;
+  color: #f0ede8;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 13px;
+}
+
+#popup-root {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+#popup-logo {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f0ede8;
+  letter-spacing: 0.04em;
+}
+
+#popup-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d4a03a;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+#popup-connected {
+  flex-direction: column;
+  gap: 12px;
+}
+
+#popup-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#popup-status-text {
+  font-size: 12px;
+  color: #d4a03a;
+}
+
+#popup-info {
+  background: #111114;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.popup-label {
+  font-size: 10px;
+  color: #7a7870;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.popup-value {
+  font-size: 13px;
+  color: #d4a03a;
+  font-weight: 600;
+}
+
+#popup-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#popup-actions button {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+
+#popup-dashboard-btn {
+  background: #d4a03a;
+  color: #0a0a0b;
+}
+
+#popup-dashboard-btn:hover {
+  background: #f0c060;
+}
+
+#popup-disconnect-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  color: #7a7870;
+}
+
+#popup-disconnect-btn:hover {
+  color: #f0ede8;
+}
+
+#popup-disconnected {
+  flex-direction: column;
+  gap: 12px;
+}
+
+#popup-desc {
+  font-size: 12px;
+  color: #7a7870;
+  line-height: 1.6;
+}
+
+#popup-deepgram-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#popup-deepgram-input {
+  background: #111114;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #f0ede8;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+
+#popup-deepgram-input:focus {
+  border-color: rgba(212,160,58,0.5);
+}
+
+#popup-deepgram-input::placeholder {
+  color: #3a3a3a;
+}
+
+#popup-code-input {
+  background: #111114;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #f0ede8;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+
+#popup-code-input:focus {
+  border-color: rgba(212,160,58,0.5);
+}
+
+#popup-code-input::placeholder {
+  color: #3a3a3a;
+}
+
+#popup-connect-btn {
+  width: 100%;
+  padding: 11px;
+  background: #d4a03a;
+  color: #0a0a0b;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+#popup-connect-btn:hover {
+  background: #f0c060;
+}

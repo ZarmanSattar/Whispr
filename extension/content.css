@@ -1,0 +1,150 @@
+/* ── Whispr Extension — Overlay Styles ──────────────────────────────────── */
+
+#whispr-overlay {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 660px;
+  z-index: 2147483647;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  user-select: none;
+}
+
+#whispr-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  background: #111114;
+  border-bottom: 1px solid #1e1e22;
+  padding: 0 12px;
+  cursor: move;
+}
+
+#whispr-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#whispr-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d4a03a;
+  animation: whispr-pulse 2s infinite;
+  flex-shrink: 0;
+}
+
+#whispr-dot.whispr-recording {
+  background: #ff4444;
+  animation: whispr-pulse-fast 0.5s infinite;
+}
+
+@keyframes whispr-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes whispr-pulse-fast {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+#whispr-logo {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f0ede8;
+  letter-spacing: 0.04em;
+}
+
+#whispr-status {
+  font-size: 11px;
+  color: #7a7870;
+  margin-left: 4px;
+}
+
+#whispr-right {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+#whispr-right button {
+  background: none;
+  border: none;
+  color: #7a7870;
+  font-size: 11px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+#whispr-right button:hover {
+  color: #f0ede8;
+}
+
+#whispr-close-btn:hover {
+  color: #ff4444 !important;
+}
+
+#whispr-chevron {
+  color: #d4a03a !important;
+  font-size: 14px !important;
+}
+
+#whispr-preview-strip {
+  height: 28px;
+  background: #0a0a0b;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #1e1e22;
+}
+
+#whispr-preview-text {
+  font-size: 11px;
+  color: #d4a03a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+#whispr-panel {
+  background: #0a0a0b;
+  flex-direction: column;
+  max-height: 220px;
+  border-bottom: 1px solid #1e1e22;
+}
+
+#whispr-question {
+  font-size: 11px;
+  color: #7a7870;
+  padding: 10px 16px 6px;
+  line-height: 1.5;
+}
+
+#whispr-divider {
+  height: 1px;
+  background: #1e1e22;
+  margin: 0 16px;
+  flex-shrink: 0;
+}
+
+#whispr-answer {
+  font-size: 12px;
+  color: #f0ede8;
+  padding: 10px 16px;
+  line-height: 1.7;
+  overflow-y: auto;
+  flex: 1;
+}
+
+#whispr-answer .whispr-amber {
+  color: #d4a03a;
+}
