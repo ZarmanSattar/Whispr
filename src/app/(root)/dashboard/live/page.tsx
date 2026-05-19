@@ -93,7 +93,7 @@ export default function LiveModePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code: sessionCode }),
       });
-    } catch (e) {
+    } catch {
       // ignore — reset UI regardless
     }
     handleReset();
