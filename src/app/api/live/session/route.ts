@@ -4,6 +4,16 @@ import { db } from "@/lib/db";
 import { liveSessions } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: corsHeaders });
+}
+
 function generateCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
@@ -46,18 +56,14 @@ export async function GET(req: Request) {
 
     const [session] = await db.select().from(liveSessions).where(eq(liveSessions.code, code));
 
-    if (!session) return NextResponse.json({ error: "Invalid code" }, { status: 404 });
-
-    if (new Date() > session.expiresAt) {
-      return NextResponse.json({ error: "Session expired" }, { status: 410 });
+    if (!session || new Date() > session.expiresAt) {
+      return NextResponse.json({ valid: false }, { status: 404, headers: corsHeaders });
     }
 
-    return NextResponse.json({
-      sessionId: session.id,
-      jobRole: session.jobRole,
-      targetCompany: session.targetCompany,
-      resumeText: session.resumeText,
-    });
+    return NextResponse.json(
+      { valid: true, jobRole: session.jobRole, targetCompany: session.targetCompany },
+      { headers: corsHeaders }
+    );
   } catch (err) {
     console.error("Live session fetch error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
