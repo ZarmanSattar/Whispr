@@ -85,6 +85,20 @@ export default function LiveModePage() {
     setError("");
   }
 
+  async function handleEndSession() {
+    if (!sessionCode) return;
+    try {
+      await fetch("/api/live/session", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: sessionCode }),
+      });
+    } catch (e) {
+      // ignore — reset UI regardless
+    }
+    handleReset();
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0a0b] text-[#f0ede8]">
       {/* Nav */}
@@ -218,6 +232,12 @@ export default function LiveModePage() {
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-[#d4a03a]/30 text-sm text-[#d4a03a] hover:bg-[#d4a03a]/10 transition-colors"
               >
                 {copied ? "Copied!" : "Copy Code"}
+              </button>
+              <button
+                onClick={handleEndSession}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-red-500/30 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+              >
+                End Session
               </button>
             </div>
 

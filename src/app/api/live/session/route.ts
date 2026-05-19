@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
@@ -43,6 +43,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ code: session.code, sessionId: session.id, expiresAt });
   } catch (err) {
     console.error("Live session error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const { code } = await req.json();
+    if (!code) return NextResponse.json({ error: "Code required" }, { status: 400, headers: corsHeaders });
+
+    await db.delete(liveSessions).where(eq(liveSessions.code, code));
+
+    return NextResponse.json({ success: true }, { headers: corsHeaders });
+  } catch (err) {
+    console.error("Live session delete error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
